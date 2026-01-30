@@ -1,0 +1,388 @@
+{
+  "project": {
+    "name": "VendingPreneur Map",
+    "description": "Internal CRM mapping tool for Modern Amenities Group to visualize 20,000+ Vendingpreneur clients across the United States",
+    "type": "internal_tool",
+    "tech_stack": {
+      "framework": "Next.js 14 (App Router)",
+      "language": "TypeScript (strict mode)",
+      "ui_library": "shadcn/ui + Radix UI",
+      "styling": "Tailwind CSS",
+      "mapping": "Mapbox GL JS",
+      "icons": "Lucide React",
+      "deployment": "Vercel"
+    },
+    "timeline": {
+      "estimated_hours": "10-13 hours",
+      "phases": [
+        {
+          "name": "Setup & Configuration",
+          "duration": "1-2 hours"
+        },
+        {
+          "name": "Map Component",
+          "duration": "2-3 hours"
+        },
+        {
+          "name": "Search & Filters",
+          "duration": "2 hours"
+        },
+        {
+          "name": "Client Sidebar",
+          "duration": "2-3 hours"
+        },
+        {
+          "name": "Stats Dashboard",
+          "duration": "1 hour"
+        },
+        {
+          "name": "Main Page Assembly",
+          "duration": "1 hour"
+        },
+        {
+          "name": "Testing & Deploy",
+          "duration": "1 hour"
+        }
+      ]
+    }
+  },
+  "data_source": {
+    "platform": "Airtable",
+    "access": "read_only",
+    "tables": {
+      "clients": {
+        "name": "Clients",
+        "record_count": 20647,
+        "required_fields": [
+          "Full Name",
+          "Client ID*",
+          "Membership Level",
+          "Status",
+          "City",
+          "State/Province",
+          "Latitude",
+          "Longitude",
+          "Total Number of Machines",
+          "Total Number of Locations",
+          "Total Monthly Revenue",
+          "Personal Email",
+          "Phone Number",
+          "Business Name",
+          "Location 1-5 Address"
+        ]
+      },
+      "locations": {
+        "name": "Locations",
+        "record_count": 67,
+        "required_fields": [
+          "Location Name",
+          "Property Type",
+          "Machine Type",
+          "Number of Machines",
+          "Monthly Revenue"
+        ]
+      }
+    }
+  },
+  "environment_variables": {
+    "required": [
+      {
+        "name": "AIRTABLE_PERSONAL_ACCESS_TOKEN",
+        "description": "Read-only Airtable personal access token",
+        "source": "Adam Wolfe",
+        "is_secret": true
+      },
+      {
+        "name": "AIRTABLE_BASE_ID",
+        "description": "Airtable base ID (starts with 'app')",
+        "source": "Adam Wolfe",
+        "is_secret": false
+      },
+      {
+        "name": "AIRTABLE_CLIENTS_TABLE_NAME",
+        "description": "Name of clients table",
+        "value": "Clients",
+        "is_secret": false
+      },
+      {
+        "name": "AIRTABLE_LOCATIONS_TABLE_NAME",
+        "description": "Name of locations table",
+        "value": "Locations",
+        "is_secret": false
+      },
+      {
+        "name": "NEXT_PUBLIC_MAPBOX_TOKEN",
+        "description": "Mapbox public access token",
+        "value": "pk.eyJ1IjoiYWRhbXdvbGZlIiwiYSI6ImNtbDFmYTYzNTA3ZXUzZG9mY2R0eWh5OGoifQ.M6oK5RfEWBqLgUJ6-bOSbg",
+        "is_secret": false
+      }
+    ]
+  },
+  "design_system": {
+    "colors": {
+      "primary": "#00B67A",
+      "background": "#FFFFFF",
+      "text_primary": "#0A0A0A",
+      "text_secondary": "#525252",
+      "border": "#E5E5E5",
+      "hover": "#FAFAFA",
+      "membership": {
+        "gold": "#FFD700",
+        "silver": "#C0C0C0",
+        "bronze": "#CD7F32",
+        "expired": "#999999"
+      }
+    },
+    "typography": {
+      "font_family": "Inter",
+      "sizes": {
+        "h1": "32px",
+        "h2": "24px",
+        "h3": "18px",
+        "body": "14px",
+        "small": "12px"
+      }
+    },
+    "spacing": {
+      "container": "max-w-screen-2xl",
+      "padding": "16px",
+      "gap": "16px",
+      "border_radius": "8px"
+    }
+  },
+  "features": {
+    "core": [
+      {
+        "name": "Interactive Map",
+        "description": "Display all clients on US map with color-coded markers",
+        "components": ["MapView", "ClientMarker"],
+        "priority": "critical"
+      },
+      {
+        "name": "Search & Filter",
+        "description": "Full-text search and multi-criteria filtering",
+        "components": ["SearchBar", "FilterPanel"],
+        "priority": "critical"
+      },
+      {
+        "name": "Client Details Sidebar",
+        "description": "Slide-in panel with complete client information",
+        "components": ["ClientSidebar", "ContactCard", "MetricsGrid", "LocationsList"],
+        "priority": "critical"
+      },
+      {
+        "name": "Stats Dashboard",
+        "description": "Real-time aggregate metrics",
+        "components": ["StatsBar"],
+        "priority": "high"
+      }
+    ],
+    "optional": [
+      {
+        "name": "Marker Clustering",
+        "description": "Group markers in dense areas",
+        "priority": "nice_to_have"
+      },
+      {
+        "name": "Mobile Responsive",
+        "description": "Optimize for mobile devices",
+        "priority": "nice_to_have"
+      }
+    ]
+  },
+  "file_structure": {
+    "root": "vendingpreneur-map/",
+    "directories": [
+      "app/",
+      "app/api/clients/",
+      "components/map/",
+      "components/search/",
+      "components/sidebar/",
+      "components/dashboard/",
+      "components/ui/",
+      "lib/",
+      "public/"
+    ],
+    "key_files": [
+      {
+        "path": "app/layout.tsx",
+        "description": "Root layout with font and styles"
+      },
+      {
+        "path": "app/page.tsx",
+        "description": "Main map page with state management"
+      },
+      {
+        "path": "app/globals.css",
+        "description": "Global styles and Tailwind imports"
+      },
+      {
+        "path": "app/api/clients/route.ts",
+        "description": "Server-side API route for Airtable data"
+      },
+      {
+        "path": "components/map/MapView.tsx",
+        "description": "Mapbox map container with markers"
+      },
+      {
+        "path": "components/search/SearchBar.tsx",
+        "description": "Search input with debouncing"
+      },
+      {
+        "path": "components/search/FilterPanel.tsx",
+        "description": "Multi-criteria filter panel"
+      },
+      {
+        "path": "components/sidebar/ClientSidebar.tsx",
+        "description": "Client details sidebar container"
+      },
+      {
+        "path": "components/sidebar/ContactCard.tsx",
+        "description": "Contact information card"
+      },
+      {
+        "path": "components/sidebar/MetricsGrid.tsx",
+        "description": "2x2 metrics cards"
+      },
+      {
+        "path": "components/sidebar/LocationsList.tsx",
+        "description": "Accordion list of client locations"
+      },
+      {
+        "path": "components/dashboard/StatsBar.tsx",
+        "description": "Top bar with aggregate stats"
+      },
+      {
+        "path": "lib/types.ts",
+        "description": "TypeScript interfaces and types"
+      },
+      {
+        "path": "lib/constants.ts",
+        "description": "App-wide constants and config"
+      },
+      {
+        "path": "lib/airtable.ts",
+        "description": "Airtable API client functions"
+      },
+      {
+        "path": "lib/utils.ts",
+        "description": "Helper functions (formatting, etc)"
+      },
+      {
+        "path": "package.json",
+        "description": "Dependencies and scripts"
+      },
+      {
+        "path": ".env.local",
+        "description": "Environment variables (not committed)"
+      },
+      {
+        "path": ".env.example",
+        "description": "Template for environment variables"
+      }
+    ]
+  },
+  "dependencies": {
+    "production": {
+      "next": "14.2.18",
+      "react": "^18.3.1",
+      "react-dom": "^18.3.1",
+      "mapbox-gl": "^3.7.0",
+      "react-map-gl": "^7.1.7",
+      "airtable": "^0.12.2",
+      "@radix-ui/react-accordion": "^1.2.1",
+      "@radix-ui/react-dialog": "^1.1.2",
+      "@radix-ui/react-dropdown-menu": "^2.1.2",
+      "@radix-ui/react-label": "^2.1.0",
+      "@radix-ui/react-select": "^2.1.2",
+      "@radix-ui/react-separator": "^1.1.0",
+      "@radix-ui/react-slider": "^1.2.1",
+      "@radix-ui/react-slot": "^1.1.0",
+      "class-variance-authority": "^0.7.0",
+      "clsx": "^2.1.1",
+      "lucide-react": "^0.454.0",
+      "tailwind-merge": "^2.5.4",
+      "tailwindcss-animate": "^1.0.7",
+      "use-debounce": "^10.0.4"
+    },
+    "development": {
+      "@types/mapbox-gl": "^3.4.0",
+      "@types/node": "^22",
+      "@types/react": "^18",
+      "@types/react-dom": "^18",
+      "autoprefixer": "^10.4.20",
+      "eslint": "^8",
+      "eslint-config-next": "14.2.18",
+      "postcss": "^8",
+      "tailwindcss": "^3.4.1",
+      "typescript": "^5"
+    }
+  },
+  "testing_checklist": [
+    "Map loads with all markers visible",
+    "Markers are color-coded by membership level",
+    "Search bar filters clients correctly",
+    "Filters apply and update results",
+    "Clicking marker opens sidebar",
+    "Sidebar shows complete client details",
+    "Locations accordion expands correctly",
+    "Stats bar updates with filters",
+    "Airtable links open correctly",
+    "No console errors",
+    "Responsive on desktop (1920x1080 minimum)"
+  ],
+  "deployment": {
+    "platform": "Vercel",
+    "steps": [
+      "Push code to GitHub",
+      "Import repo in Vercel dashboard",
+      "Add environment variables",
+      "Deploy"
+    ],
+    "environment": "production",
+    "custom_domain": false
+  },
+  "acceptance_criteria": [
+    "All 20,000+ clients with valid coordinates appear on map",
+    "Markers correctly color-coded by membership level",
+    "Search filters by name, city, state in <100ms",
+    "Filter panel works for membership, state, machine count",
+    "Click marker opens sidebar with full client details",
+    "Sidebar shows contact info, metrics, and locations",
+    "Stats bar displays totals and updates with filters",
+    "Links to Airtable records work correctly",
+    "Zero JavaScript errors in console",
+    "Deployed to Vercel and accessible via URL"
+  ],
+  "notes": {
+    "coding_standards": [
+      "TypeScript strict mode (no 'any' types)",
+      "Prefer server components where possible",
+      "Use 'use client' only for interactive components",
+      "Follow shadcn/ui conventions",
+      "Keep components under 200 lines",
+      "Add JSDoc comments for complex functions"
+    ],
+    "known_issues": [
+      "Some clients may have null lat/lng (filter these out)",
+      "Phone numbers may need formatting",
+      "Revenue values may be stored as strings (parse to numbers)",
+      "Airtable API has 5 requests/second rate limit"
+    ],
+    "future_enhancements": [
+      "Heat map visualization",
+      "Export filtered results to CSV",
+      "Historical data comparison",
+      "Multi-layer view with Locations table",
+      "Real-time webhook updates"
+    ]
+  },
+  "contact": {
+    "product_owner": {
+      "name": "Adam Wolfe",
+      "email": "adamwolfe102@gmail.com",
+      "company": "Modern Amenities Group",
+      "role": "Technical Project Assistant / Head of AI & Innovation"
+    }
+  }
+}
