@@ -146,16 +146,21 @@ export default function MapView({ clients, onClientSelect }: MapViewProps) {
             // Event Handlers
 
             // Click on cluster -> Zoom in
+            // Click on cluster -> Zoom in
             map.current.on('click', 'clusters', (e) => {
                 const features = map.current?.queryRenderedFeatures(e.point, { layers: ['clusters'] });
-                const clusterId = features?.[0].properties?.cluster_id;
+                const clusterId = features && features[0] && features[0].properties ? features[0].properties.cluster_id : null;
+
+                if (!clusterId || !features || !features[0]) return;
+
+                const center = (features[0].geometry as any).coordinates;
 
                 (map.current?.getSource(sourceId) as mapboxgl.GeoJSONSource).getClusterExpansionZoom(
                     clusterId,
                     (err, zoom) => {
                         if (err || !map.current || zoom === null || zoom === undefined) return;
                         map.current.easeTo({
-                            center: (features?.[0].geometry as any).coordinates,
+                            center,
                             zoom: zoom
                         });
                     }

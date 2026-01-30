@@ -95,9 +95,11 @@ export default function FilterPanel({ filters, onChange, onReset }: FilterPanelP
                                         max={20}
                                         step={1}
                                         value={[filters.minMachines, filters.maxMachines]}
-                                        onValueChange={([min, max]) =>
-                                            onChange({ ...filters, minMachines: min, maxMachines: max })
-                                        }
+                                        onValueChange={(value) => {
+                                            const min = value[0] ?? 0;
+                                            const max = value[1] ?? 100;
+                                            onChange({ ...filters, minMachines: min, maxMachines: max });
+                                        }}
                                     />
                                 </div>
 
