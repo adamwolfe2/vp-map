@@ -4,26 +4,26 @@
 export interface VendingpreneurClient {
   // Airtable Record Info
   id: string; // Airtable record ID
-  
+
   // Basic Info
   fullName: string; // "Full Name" field
   clientId: string; // "Client ID*" field
   firstName?: string;
   lastName?: string;
-  
+
   // Membership & Status
   membershipLevel: 'Gold' | 'Silver' | 'Bronze' | 'Platinum' | null;
   status: string; // "Status" field
   dateAdded: string; // "Date Added" field
   programStartDate?: string;
   daysInProgram?: number;
-  
+
   // Contact Info
   personalEmail?: string;
   businessEmail?: string;
   phoneNumber?: string;
   businessName?: string;
-  
+
   // Location Data
   streetAddress?: string; // "Street, Building" field
   city?: string;
@@ -32,49 +32,49 @@ export interface VendingpreneurClient {
   fullAddress?: string;
   latitude?: number;
   longitude?: number;
-  
+
   // Business Metrics
   totalNumberOfMachines?: number;
   totalNumberOfLocations?: number;
   totalMonthlyRevenue?: number;
   totalNetRevenue?: number;
   machinesPlaced?: number;
-  
+
   // Location Addresses (1-5)
   location1Address?: string;
   location1MachineType?: string;
   location1MonthlyRevenue?: number;
   location1NumberOfMachines?: number;
   location1PropertyType?: string;
-  
+
   location2Address?: string;
   location2MachineType?: string;
   location2MonthlyRevenue?: number;
   location2NumberOfMachines?: number;
   location2PropertyType?: string;
-  
+
   location3Address?: string;
   location3MachineType?: string;
   location3MonthlyRevenue?: number;
   location3NumberOfMachines?: number;
   location3PropertyType?: string;
-  
+
   location4Address?: string;
   location4MachineType?: string;
   location4MonthlyRevenue?: number;
   location4NumberOfMachines?: number;
   location4PropertyType?: string;
-  
+
   location5Address?: string;
   location5MachineType?: string;
   location5MonthlyRevenue?: number;
   location5NumberOfMachines?: number;
   location5PropertyType?: string;
-  
+
   // VendHub Integration
   vendHubClientId?: string;
   inVendHub?: boolean;
-  
+
   // Additional Fields
   nationalContracts?: string[];
   skoolJoinDate?: string;
@@ -112,8 +112,8 @@ export interface ClientLocation {
 // Filter state
 export interface MapFilters {
   searchQuery: string;
-  states: string[];
-  membershipLevels: string[];
+  states: readonly string[];
+  membershipLevels: readonly string[];
   minMachines: number;
   maxMachines: number;
   minRevenue: number;
