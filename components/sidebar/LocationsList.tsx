@@ -2,6 +2,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Card } from '@/components/ui/card';
 import { VendingpreneurClient, ClientLocation } from '@/lib/types';
 import { formatCurrency } from '@/lib/utils';
+import { MapPin } from 'lucide-react';
 
 interface LocationsListProps {
     client: VendingpreneurClient;
@@ -28,6 +29,10 @@ export default function LocationsList({ client }: LocationsListProps) {
         return null;
     }
 
+    const openGoogleMaps = (address: string) => {
+        window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`, '_blank');
+    };
+
     return (
         <Card className="p-4">
             <h3 className="font-semibold mb-3">Locations ({locations.length})</h3>
@@ -39,7 +44,13 @@ export default function LocationsList({ client }: LocationsListProps) {
                         </AccordionTrigger>
                         <AccordionContent>
                             <div className="space-y-2 text-sm">
-                                <p className="text-gray-600">{location.address}</p>
+                                <div
+                                    className="flex items-start gap-2 text-gray-600 hover:text-primary cursor-pointer border-b pb-2 mb-2"
+                                    onClick={() => openGoogleMaps(location.address)}
+                                >
+                                    <MapPin className="h-4 w-4 shrink-0 mt-0.5" />
+                                    <p>{location.address}</p>
+                                </div>
                                 {location.machineType && (
                                     <p><span className="font-medium">Machine:</span> {location.machineType}</p>
                                 )}

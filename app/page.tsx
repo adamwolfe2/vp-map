@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useDebounce } from 'use-debounce';
+import { motion, AnimatePresence } from 'framer-motion';
 import MapView from '@/components/map/MapView';
 import SearchBar from '@/components/search/SearchBar';
 import FilterPanel from '@/components/search/FilterPanel';
@@ -126,14 +127,20 @@ export default function HomePage() {
       )}
 
       {/* Loading Overlay */}
-      {isLoading && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm">
-          <div className="flex flex-col items-center gap-4">
-            <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-            <p className="text-lg font-medium text-gray-600">Loading Map Data...</p>
-          </div>
-        </div>
-      )}
+      <AnimatePresence>
+        {isLoading && (
+          <motion.div
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-50 flex items-center justify-center bg-white"
+          >
+            <div className="flex flex-col items-center gap-4">
+              <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+              <p className="text-lg font-medium text-gray-600 animate-pulse">Initializing Map Data...</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </main>
   );
 }

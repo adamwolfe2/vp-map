@@ -8,6 +8,7 @@ import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { MapFilters, US_STATES, MEMBERSHIP_LEVELS } from '@/lib/types';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface FilterPanelProps {
     filters: MapFilters;
@@ -44,63 +45,73 @@ export default function FilterPanel({ filters, onChange, onReset }: FilterPanelP
             </div>
 
             {/* Filter Panel */}
-            {isOpen && (
-                <Card className="absolute top-16 right-4 z-20 w-80 p-4 shadow-lg">
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                            <h3 className="font-semibold">Filters</h3>
-                            <Button variant="ghost" size="sm" onClick={() => setIsOpen(false)}>
-                                <X className="h-4 w-4" />
-                            </Button>
-                        </div>
+            <AnimatePresence>
+                {isOpen && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -20, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                        transition={{ duration: 0.2 }}
+                        className="absolute top-16 right-4 z-20"
+                    >
+                        <Card className="w-80 p-4 shadow-lg">
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <h3 className="font-semibold">Filters</h3>
+                                    <Button variant="ghost" size="sm" onClick={() => setIsOpen(false)}>
+                                        <X className="h-4 w-4" />
+                                    </Button>
+                                </div>
 
-                        {/* Membership Level */}
-                        <div>
-                            <label className="text-sm font-medium mb-2 block">Membership Level</label>
-                            <div className="flex flex-wrap gap-2">
-                                {MEMBERSHIP_LEVELS.map((level) => (
-                                    <Badge
-                                        key={level}
-                                        variant={filters.membershipLevels.includes(level) ? 'default' : 'outline'}
-                                        className="cursor-pointer"
-                                        onClick={() => {
-                                            const updated = filters.membershipLevels.includes(level)
-                                                ? filters.membershipLevels.filter((l) => l !== level)
-                                                : [...filters.membershipLevels, level];
-                                            onChange({ ...filters, membershipLevels: updated });
-                                        }}
-                                    >
-                                        {level}
-                                    </Badge>
-                                ))}
+                                {/* Membership Level */}
+                                <div>
+                                    <label className="text-sm font-medium mb-2 block">Membership Level</label>
+                                    <div className="flex flex-wrap gap-2">
+                                        {MEMBERSHIP_LEVELS.map((level) => (
+                                            <Badge
+                                                key={level}
+                                                variant={filters.membershipLevels.includes(level) ? 'default' : 'outline'}
+                                                className="cursor-pointer"
+                                                onClick={() => {
+                                                    const updated = filters.membershipLevels.includes(level)
+                                                        ? filters.membershipLevels.filter((l) => l !== level)
+                                                        : [...filters.membershipLevels, level];
+                                                    onChange({ ...filters, membershipLevels: updated });
+                                                }}
+                                            >
+                                                {level}
+                                            </Badge>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Machine Count */}
+                                <div>
+                                    <label className="text-sm font-medium mb-2 block">
+                                        Machines: {filters.minMachines} - {filters.maxMachines}+
+                                    </label>
+                                    <Slider
+                                        min={0}
+                                        max={20}
+                                        step={1}
+                                        value={[filters.minMachines, filters.maxMachines]}
+                                        onValueChange={([min, max]) =>
+                                            onChange({ ...filters, minMachines: min, maxMachines: max })
+                                        }
+                                    />
+                                </div>
+
+                                {/* Clear Filters */}
+                                {hasActiveFilters && (
+                                    <Button variant="outline" size="sm" onClick={onReset} className="w-full">
+                                        Clear All Filters
+                                    </Button>
+                                )}
                             </div>
-                        </div>
-
-                        {/* Machine Count */}
-                        <div>
-                            <label className="text-sm font-medium mb-2 block">
-                                Machines: {filters.minMachines} - {filters.maxMachines}+
-                            </label>
-                            <Slider
-                                min={0}
-                                max={20}
-                                step={1}
-                                value={[filters.minMachines, filters.maxMachines]}
-                                onValueChange={([min, max]) =>
-                                    onChange({ ...filters, minMachines: min, maxMachines: max })
-                                }
-                            />
-                        </div>
-
-                        {/* Clear Filters */}
-                        {hasActiveFilters && (
-                            <Button variant="outline" size="sm" onClick={onReset} className="w-full">
-                                Clear All Filters
-                            </Button>
-                        )}
-                    </div>
-                </Card>
-            )}
+                        </Card>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </>
     );
 }
