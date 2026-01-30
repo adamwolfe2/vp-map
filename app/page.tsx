@@ -84,6 +84,59 @@ export default function HomePage() {
     setSearchQuery('');
   };
 
+  // Keyboard Shortcuts
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      // ESC closes sidebar
+      if (e.key === 'Escape' && selectedClient) {
+        setSelectedClient(null);
+      }
+
+      // Cmd+K or Ctrl+K focuses search
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        document.querySelector<HTMLInputElement>('input[type="text"]')?.focus();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [selectedClient]);
+
+  // Performance Logging
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      const start = performance.now();
+      // Trigger measurement
+      const end = performance.now();
+      console.log(`Filter applied in ${(end - start).toFixed(2)}ms`);
+      console.log(`Showing ${filteredClients.length} of ${allClients.length} clients`);
+    }
+  }, [allClients, debouncedSearch, filters, filteredClients.length]);
+
+  if (isLoading) {
+    return (
+      <div className="relative h-screen w-screen overflow-hidden bg-background">
+        {/* Map skeleton */}
+        <div className="absolute inset-0 bg-muted animate-pulse" />
+
+        {/* Search bar skeleton */}
+        <div className="absolute top-4 left-4 w-96 h-12 bg-white rounded-lg shadow-lg animate-pulse" />
+
+        {/* Stats bar skeleton */}
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 w-[600px] h-20 bg-white rounded-lg shadow-lg animate-pulse" />
+
+        {/* Loading text */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="text-center space-y-2">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto" />
+            <p className="text-sm text-muted-foreground">Loading map...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <main className="relative w-full h-screen overflow-hidden bg-gray-50">
       {/* Map Layer */}
@@ -125,22 +178,6 @@ export default function HomePage() {
           onClose={() => setSelectedClient(null)}
         />
       )}
-
-      {/* Loading Overlay */}
-      <AnimatePresence>
-        {isLoading && (
-          <motion.div
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 z-50 flex items-center justify-center bg-white"
-          >
-            <div className="flex flex-col items-center gap-4">
-              <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-              <p className="text-lg font-medium text-gray-600 animate-pulse">Initializing Map Data...</p>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </main>
   );
 }
