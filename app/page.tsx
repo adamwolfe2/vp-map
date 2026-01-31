@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useDebounce } from 'use-debounce';
 import { motion, AnimatePresence } from 'framer-motion';
+import { AlertTriangle } from 'lucide-react';
 import MapView from '@/components/map/MapView';
 import SearchBar from '@/components/search/SearchBar';
 import FilterPanel from '@/components/search/FilterPanel';
@@ -149,6 +150,21 @@ export default function HomePage() {
 
       {/* Top Interface Layer */}
       <div className="pointer-events-none absolute inset-0 z-10">
+
+        {/* Data Quality Warning */}
+        {filteredClients.length > 0 &&
+          filteredClients.filter(c => c.latitude && c.longitude).length < filteredClients.length && (
+            <div className="absolute top-24 left-1/2 -translate-x-1/2 z-20 pointer-events-auto">
+              <div className="flex items-center gap-2 px-4 py-2 bg-yellow-100 text-yellow-800 rounded-full shadow-md text-sm font-medium border border-yellow-200">
+                <AlertTriangle className="w-4 h-4" />
+                <span>
+                  Showing {filteredClients.filter(c => c.latitude && c.longitude).length} mapped clients
+                  ({filteredClients.length - filteredClients.filter(c => c.latitude && c.longitude).length} missing location)
+                </span>
+              </div>
+            </div>
+          )}
+
         {/* Search & Filters */}
         <div className="pointer-events-auto">
           <SearchBar

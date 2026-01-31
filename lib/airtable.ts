@@ -21,18 +21,25 @@ const getAirtableBase = () => {
   return Airtable.base(baseId);
 };
 
+// Helper for parsing numbers safely
+const parseNumber = (val: any): number | undefined => {
+  if (val === null || val === undefined || val === '') return undefined;
+  const num = Number(val);
+  return isNaN(num) ? undefined : num;
+};
+
 // Transform Airtable record to our type
 const transformAirtableRecord = (record: any): VendingpreneurClient => {
   const fields = record.fields;
-  
+
   return {
     id: record.id,
-    fullName: fields[AIRTABLE_FIELD_MAPPING.fullName] || '',
-    clientId: fields[AIRTABLE_FIELD_MAPPING.clientId] || '',
-    firstName: fields[AIRTABLE_FIELD_MAPPING.firstName],
-    lastName: fields[AIRTABLE_FIELD_MAPPING.lastName],
-    membershipLevel: fields[AIRTABLE_FIELD_MAPPING.membershipLevel] || null,
-    status: fields[AIRTABLE_FIELD_MAPPING.status] || '',
+    fullName: String(fields[AIRTABLE_FIELD_MAPPING.fullName] || ''),
+    clientId: String(fields[AIRTABLE_FIELD_MAPPING.clientId] || ''),
+    firstName: fields[AIRTABLE_FIELD_MAPPING.firstName] ? String(fields[AIRTABLE_FIELD_MAPPING.firstName]) : undefined,
+    lastName: fields[AIRTABLE_FIELD_MAPPING.lastName] ? String(fields[AIRTABLE_FIELD_MAPPING.lastName]) : undefined,
+    membershipLevel: (fields[AIRTABLE_FIELD_MAPPING.membershipLevel] as any) || null,
+    status: String(fields[AIRTABLE_FIELD_MAPPING.status] || ''),
     dateAdded: fields[AIRTABLE_FIELD_MAPPING.dateAdded],
     programStartDate: fields[AIRTABLE_FIELD_MAPPING.programStartDate],
     daysInProgram: fields[AIRTABLE_FIELD_MAPPING.daysInProgram],
@@ -45,11 +52,11 @@ const transformAirtableRecord = (record: any): VendingpreneurClient => {
     state: fields[AIRTABLE_FIELD_MAPPING.state],
     zipCode: fields[AIRTABLE_FIELD_MAPPING.zipCode],
     fullAddress: fields[AIRTABLE_FIELD_MAPPING.fullAddress],
-    latitude: fields[AIRTABLE_FIELD_MAPPING.latitude],
-    longitude: fields[AIRTABLE_FIELD_MAPPING.longitude],
-    totalNumberOfMachines: fields[AIRTABLE_FIELD_MAPPING.totalNumberOfMachines] || 0,
-    totalNumberOfLocations: fields[AIRTABLE_FIELD_MAPPING.totalNumberOfLocations] || 0,
-    totalMonthlyRevenue: fields[AIRTABLE_FIELD_MAPPING.totalMonthlyRevenue] || 0,
+    latitude: parseNumber(fields[AIRTABLE_FIELD_MAPPING.latitude]),
+    longitude: parseNumber(fields[AIRTABLE_FIELD_MAPPING.longitude]),
+    totalNumberOfMachines: Number(fields[AIRTABLE_FIELD_MAPPING.totalNumberOfMachines] || 0),
+    totalNumberOfLocations: Number(fields[AIRTABLE_FIELD_MAPPING.totalNumberOfLocations] || 0),
+    totalMonthlyRevenue: Number(fields[AIRTABLE_FIELD_MAPPING.totalMonthlyRevenue] || 0),
     totalNetRevenue: fields[AIRTABLE_FIELD_MAPPING.totalNetRevenue],
     location1Address: fields[AIRTABLE_FIELD_MAPPING.location1Address],
     location1MachineType: fields[AIRTABLE_FIELD_MAPPING.location1MachineType],
@@ -104,13 +111,12 @@ export async function fetchAllClients(): Promise<VendingpreneurClient[]> {
       .eachPage((records, fetchNextPage) => {
         records.forEach((record) => {
           const client = transformAirtableRecord(record);
-          
-          // Only include clients with valid coordinates
-          if (client.latitude && client.longitude) {
-            clients.push(client);
-          }
+
+          // Include all clients even if missing coordinates
+          // Map component will filter them out, but StatsBar will count them
+          clients.push(client);
         });
-        
+
         fetchNextPage();
       });
 
@@ -146,7 +152,7 @@ export function filterClients(
   if (!searchQuery) return clients;
 
   const query = searchQuery.toLowerCase().trim();
-  
+
   return clients.filter((client) => {
     return (
       client.fullName?.toLowerCase().includes(query) ||
@@ -174,7 +180,7 @@ export function calculateStats(clients: VendingpreneurClient[]) {
   const totalMachines = clients.reduce((sum, c) => sum + (c.totalNumberOfMachines || 0), 0);
   const totalRevenue = clients.reduce((sum, c) => sum + (c.totalMonthlyRevenue || 0), 0);
   const uniqueStates = new Set(clients.map((c) => c.state).filter(Boolean)).size;
-  
+
   const membershipCounts = clients.reduce((acc, c) => {
     const level = c.membershipLevel || 'Unknown';
     acc[level] = (acc[level] || 0) + 1;
