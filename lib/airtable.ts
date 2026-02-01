@@ -128,9 +128,10 @@ export async function fetchAllClients(): Promise<VendingpreneurClient[]> {
           // If client has missing coordinates, try to find them in our cache
           if (!client.latitude || !client.longitude) {
             // Try matching by name, address, or truncated name
+            const namePart = (client.fullName || '').split('\t')[0];
             const cached = coordCache.get(client.fullName) ||
               coordCache.get(client.streetAddress || '') ||
-              coordCache.get((client.fullName || '').split('\t')[0].trim());
+              coordCache.get((namePart || '').trim());
 
             if (cached && cached.lat && cached.lng) {
               client.latitude = cached.lat;
