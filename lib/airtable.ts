@@ -4,6 +4,7 @@
 import Airtable from 'airtable';
 import { VendingpreneurClient, ClientsResponse, AirtableError } from './types';
 import { API_CONFIG, AIRTABLE_FIELD_MAPPING } from './constants';
+import { MOCK_DATA } from './mock_data';
 
 // Initialize Airtable client
 const getAirtableBase = () => {
@@ -99,7 +100,8 @@ const transformAirtableRecord = (record: any): VendingpreneurClient => {
 export async function fetchAllClients(): Promise<VendingpreneurClient[]> {
   try {
     const base = getAirtableBase();
-    const clients: VendingpreneurClient[] = [];
+    // Start with seeded mock data to ensure map is populated immediately
+    const clients: VendingpreneurClient[] = [...(MOCK_DATA as any)];
 
     // Fetch all records with pagination
     await base(API_CONFIG.airtable.clientsTable)
