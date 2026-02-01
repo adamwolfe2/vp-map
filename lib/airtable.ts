@@ -100,34 +100,64 @@ const transformAirtableRecord = (record: any): VendingpreneurClient => {
 export async function fetchAllClients(): Promise<VendingpreneurClient[]> {
   try {
     const base = getAirtableBase();
-    // Start with seeded mock data to ensure map is populated immediately
-    const clients: VendingpreneurClient[] = [...(MOCK_DATA as any)];
+    // Start with seeded mock data to ensure map is populated immediately (Fallback)
+    const clients: VendingpreneurClient[] = [];
+
+    // Create a logical cache from the seeded data
+    // This allows us to "hydrate" Airtable records that lack coordinates
+    // but match an address we geocoded in our script.
+    const coordCache = new Map();
+    if (Array.isArray(MOCK_DATA)) {
+      (MOCK_DATA as any[]).forEach(c => {
+        // Cache by exact name
+        if (c.fullName) coordCache.set(c.fullName, { lat: c.latitude, lng: c.longitude });
+        // Cache by address part (before comma) for fuzzy match
+        if (c.fullName) coordCache.set(c.fullName.split(',')[0].trim(), { lat: c.latitude, lng: c.longitude });
+      });
+    }
 
     // Fetch all records with pagination
     await base(API_CONFIG.airtable.clientsTable)
       .select({
         pageSize: API_CONFIG.airtable.pageSize,
-        // Optional: Add view or filterByFormula here if you have a specific Airtable view
-        // view: 'Map Export',
       })
       .eachPage((records, fetchNextPage) => {
         records.forEach((record) => {
           const client = transformAirtableRecord(record);
 
-          // Include all clients even if missing coordinates
-          // Map component will filter them out, but StatsBar will count them
+          // If client has missing coordinates, try to find them in our cache
+          if (!client.latitude || !client.longitude) {
+            // Try matching by name, address, or truncated name
+            const cached = coordCache.get(client.fullName) ||
+              coordCache.get(client.streetAddress || '') ||
+              coordCache.get((client.fullName || '').split('\t')[0].trim());
+
+            if (cached && cached.lat && cached.lng) {
+              client.latitude = cached.lat;
+              client.longitude = cached.lng;
+            }
+          }
+
           clients.push(client);
         });
 
         fetchNextPage();
       });
 
+    // Safety Net: If we fetched nothing (e.g. auth error or empty base), 
+    // return the Mock Data so the user has a demo.
+    if (clients.length === 0) {
+      return [...(MOCK_DATA as any)];
+    }
+
     return clients;
   } catch (error) {
     console.error('Error fetching clients from Airtable:', error);
-    throw new Error('Failed to fetch clients. Check Airtable credentials and permissions.');
+    // If Airtable crash, return Mock Data
+    return [...(MOCK_DATA as any)];
   }
 }
+
 
 /**
  * Fetch a single client by record ID (read-only)
