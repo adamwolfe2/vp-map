@@ -250,6 +250,18 @@ export default function MapView({ clients, selectedClient, onClientSelect }: Map
             maxBounds: MAPBOX_CONFIG.maxBounds as unknown as mapboxgl.LngLatBoundsLike, // Restrict panning
         });
 
+        map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+        map.current.addControl(
+            new mapboxgl.GeolocateControl({
+                positionOptions: {
+                    enableHighAccuracy: true
+                },
+                trackUserLocation: true,
+                showUserHeading: true
+            }),
+            'top-right'
+        );
+
         map.current.on('load', () => {
             setIsMapLoaded(true);
         });
