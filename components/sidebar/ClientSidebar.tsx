@@ -37,14 +37,14 @@ export default function ClientSidebar({ client, isOpen, onClose }: ClientSidebar
     const SidebarContent = () => (
         <div className="flex flex-col h-full bg-slate-50/30">
             {/* Tabs Navigation */}
-            <div className="flex items-center space-x-1 p-2 bg-white border-b sticky top-0 z-10">
+            <div className="flex items-center gap-1 px-6 pt-2 pb-0 bg-white border-b sticky top-0 z-10">
                 <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => setActiveTab('overview')}
                     className={cn(
-                        "flex-1 justify-center rounded-none border-b-2 border-transparent hover:bg-transparent px-2 transition-colors",
-                        activeTab === 'overview' && "border-primary text-primary font-medium"
+                        "rounded-b-none border-b-2 border-transparent px-4 py-2 h-auto text-sm font-medium text-slate-500 hover:text-slate-900",
+                        activeTab === 'overview' && "border-blue-600 text-blue-600 bg-blue-50/50"
                     )}
                 >
                     <LayoutDashboard className="h-4 w-4 mr-2" />
@@ -55,8 +55,8 @@ export default function ClientSidebar({ client, isOpen, onClose }: ClientSidebar
                     size="sm"
                     onClick={() => setActiveTab('locations')}
                     className={cn(
-                        "flex-1 justify-center rounded-none border-b-2 border-transparent hover:bg-transparent px-2 transition-colors",
-                        activeTab === 'locations' && "border-primary text-primary font-medium"
+                        "rounded-b-none border-b-2 border-transparent px-4 py-2 h-auto text-sm font-medium text-slate-500 hover:text-slate-900",
+                        activeTab === 'locations' && "border-blue-600 text-blue-600 bg-blue-50/50"
                     )}
                 >
                     <MapPin className="h-4 w-4 mr-2" />
@@ -67,8 +67,8 @@ export default function ClientSidebar({ client, isOpen, onClose }: ClientSidebar
                     size="sm"
                     onClick={() => setActiveTab('analytics')}
                     className={cn(
-                        "flex-1 justify-center rounded-none border-b-2 border-transparent hover:bg-transparent px-2 transition-colors",
-                        activeTab === 'analytics' && "border-primary text-primary font-medium"
+                        "rounded-b-none border-b-2 border-transparent px-4 py-2 h-auto text-sm font-medium text-slate-500 hover:text-slate-900",
+                        activeTab === 'analytics' && "border-blue-600 text-blue-600 bg-blue-50/50"
                     )}
                 >
                     <BarChart3 className="h-4 w-4 mr-2" />
@@ -183,18 +183,20 @@ export default function ClientSidebar({ client, isOpen, onClose }: ClientSidebar
 
     // Header Content (shared)
     const HeaderContent = () => (
-        <div className="flex-1">
-            <h2 className="text-2xl font-bold text-slate-900">{client.fullName}</h2>
-            <div className="flex items-center gap-2 mt-2">
+        <div className="flex-1 pr-6">
+            <h2 className="text-2xl font-bold text-slate-900 tracking-tight">{client.fullName}</h2>
+            <div className="flex flex-wrap items-center gap-2 mt-3">
                 <Badge
                     style={{ backgroundColor: membershipColor }}
-                    className="text-white hover:opacity-90 px-3 py-1 text-sm font-medium shadow-sm"
+                    className="text-white hover:opacity-90 px-2.5 py-0.5 text-xs font-semibold shadow-sm rounded-md"
                 >
                     {client.membershipLevel || 'N/A'}
                 </Badge>
-                <Badge variant="outline" className="px-3 py-1 text-sm">{client.status}</Badge>
+                <Badge variant="outline" className="px-2.5 py-0.5 text-xs font-medium bg-white text-slate-600 border-slate-200">
+                    {client.status}
+                </Badge>
                 {client.vendHubClientId && (
-                    <Badge variant="secondary" className="px-3 py-1 text-sm bg-indigo-100 text-indigo-800">
+                    <Badge variant="secondary" className="px-2.5 py-0.5 text-xs font-medium bg-indigo-50 text-indigo-700 hover:bg-indigo-100">
                         VendHub Sync
                     </Badge>
                 )}
