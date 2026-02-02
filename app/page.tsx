@@ -21,7 +21,7 @@ export default function HomePage() {
   const [debouncedSearch] = useDebounce(searchQuery, 300);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch clients on mount
+  // Fetch clients on mount and every 30 seconds
   useEffect(() => {
     async function fetchData() {
       try {
@@ -39,6 +39,11 @@ export default function HomePage() {
     }
 
     fetchData();
+
+    // Poll every 30 seconds
+    const intervalId = setInterval(fetchData, 30000);
+
+    return () => clearInterval(intervalId);
   }, []);
 
   // Compute filtered clients efficiently
@@ -122,10 +127,10 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-muted animate-pulse" />
 
         {/* Search bar skeleton */}
-        <div className="absolute top-4 left-4 w-96 h-12 bg-white rounded-lg shadow-lg animate-pulse" />
+        <div className="absolute top-4 left-4 right-4 md:right-auto md:w-96 h-12 bg-white rounded-lg shadow-lg animate-pulse" />
 
         {/* Stats bar skeleton */}
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 w-[600px] h-20 bg-white rounded-lg shadow-lg animate-pulse" />
+        <div className="absolute top-24 md:top-4 left-1/2 -translate-x-1/2 w-[calc(100vw-2rem)] md:w-[600px] h-20 bg-white rounded-lg shadow-lg animate-pulse" />
 
         {/* Loading text */}
         <div className="absolute inset-0 flex items-center justify-center">

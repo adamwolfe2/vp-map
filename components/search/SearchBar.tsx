@@ -12,7 +12,7 @@ interface SearchBarProps {
 
 export default function SearchBar({ value, onChange, resultCount }: SearchBarProps) {
     return (
-        <div className="absolute top-4 left-4 z-20 bg-white rounded-lg shadow-lg p-4 w-96">
+        <div className="absolute top-4 left-4 right-4 md:right-auto md:w-96 z-20 bg-white rounded-lg shadow-lg p-4">
             <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input

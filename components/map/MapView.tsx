@@ -197,7 +197,7 @@ export default function MapView({ clients, onClientSelect }: MapViewProps) {
 
     return (
         <div className="relative w-full h-full bg-slate-200">
-            <div ref={mapContainer} className="absolute inset-0" />
+            <div ref={mapContainer} className="!absolute inset-0" />
         </div>
     );
 }

@@ -10,8 +10,8 @@ interface StatsBarProps {
 
 export default function StatsBar({ stats, isFiltered }: StatsBarProps) {
     return (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 pointer-events-none">
-            <Card className="flex items-center gap-6 px-6 py-3 shadow-lg pointer-events-auto bg-white/95 backdrop-blur-sm">
+        <div className="absolute top-24 md:top-4 left-1/2 -translate-x-1/2 z-30 pointer-events-none w-full md:w-auto flex justify-center">
+            <Card className="flex items-center gap-6 px-6 py-3 shadow-lg pointer-events-auto bg-white/95 backdrop-blur-sm mx-4 md:mx-0 overflow-x-auto max-w-[calc(100vw-2rem)] md:max-w-none no-scrollbar">
 
                 {/* Total Clients */}
                 <div className="flex items-center gap-3">
