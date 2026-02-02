@@ -140,6 +140,21 @@ export interface MarkerData {
   client: VendingpreneurClient;
 }
 
+// Flattened location for map rendering
+export interface ExtendedLocation {
+  id: string;
+  clientId: string;
+  type: 'Main' | 'SubLocation';
+  index?: number; // 0 for main, 1-5 for sub
+  name: string; // "Main Hub" or "Location 1"
+  address: string;
+  machineType?: string;
+  latitude?: number;
+  longitude?: number;
+  revenue?: number;
+  parentClient: VendingpreneurClient;
+}
+
 // API Response types
 export interface ClientsResponse {
   records: VendingpreneurClient[];
