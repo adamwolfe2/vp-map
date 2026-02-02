@@ -37,6 +37,18 @@ export default function MapView({ clients, selectedClient, onClientSelect }: Map
     // State to store geocoded locations (address -> coords)
     const [geocodedLocations, setGeocodedLocations] = useState<Map<string, { lat: number, lng: number }>>(new Map());
 
+    // Stable access to handlers/data to avoid effect re-runs
+    const latestRef = useRef({
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        handleAddToRoute: (l: ExtendedLocation) => { },
+        onClientSelect,
+        allLocations: [] as ExtendedLocation[]
+    });
+
+    useEffect(() => {
+        latestRef.current = { handleAddToRoute, onClientSelect, allLocations };
+    });
+
     // Expand clients into multiple locations (Main + Sub-locations)
     const allLocations = useMemo((): ExtendedLocation[] => {
         const expanded: ExtendedLocation[] = [];
@@ -466,27 +478,18 @@ export default function MapView({ clients, selectedClient, onClientSelect }: Map
 
                 // If Shift Key is held, add to route
                 if (e.originalEvent.shiftKey || e.originalEvent.metaKey) {
-                    const client = clients.find(c => c.id === clientId);
-                    if (client) {
-                        // We need to construct the ExtendedLocation object again ideally, 
-                        // or we can find it in allLocations if we wanted to be efficient.
-                        // For now, let's just create a basic one or look it up.
-                        // Actually, let's just pass what we can. 
-                        // BETTER: Just find it in the clients array and map it to ExtendedLocation logic?
-                        // Simpler: The feature properties ALREADY contain what we need?
-                        // Yes, let's use allLocations to find it.
-                        const loc = allLocations.find(l => l.clientId === clientId && l.type === 'Main'); // Default to main
-                        if (loc) {
-                            handleAddToRoute(loc);
-                            return;
-                        }
+                    // Actually we need the location object
+                    const loc = latestRef.current.allLocations.find(l => l.clientId === clientId && l.type === 'Main');
+                    if (loc) {
+                        latestRef.current.handleAddToRoute(loc);
+                        return;
                     }
                 }
 
                 if (clientId) {
                     const client = clients.find(c => c.id === clientId);
                     if (client) {
-                        onClientSelect(client);
+                        latestRef.current.onClientSelect(client);
                     }
                 }
             });
@@ -499,12 +502,10 @@ export default function MapView({ clients, selectedClient, onClientSelect }: Map
                 if (map.current) map.current.getCanvas().style.cursor = '';
             };
 
-            map.current.on('mouseenter', 'clusters', handleMouseEnter);
-            map.current.on('mouseleave', 'clusters', handleMouseLeave);
             map.current.on('mouseenter', 'unclustered-point', handleMouseEnter);
             map.current.on('mouseleave', 'unclustered-point', handleMouseLeave);
         }
-    }, [geoJsonData, isMapLoaded, clients, onClientSelect]);
+    }, [geoJsonData, isMapLoaded, clients]);
 
     // --- Routing Handlers ---
     const handleAddToRoute = (location: ExtendedLocation) => {
@@ -567,10 +568,9 @@ export default function MapView({ clients, selectedClient, onClientSelect }: Map
     };
 
     const saveTerritory = () => {
-        const data = draw.current?.getAll();
-
-        setIsDrawing(false);
+        // const data = draw.current?.getAll();
         // In a real app, send to API
+        setIsDrawing(false);
     };
 
     // --- Overlay logic ---
