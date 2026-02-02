@@ -24,6 +24,7 @@ export function LiveIndicator({ lastUpdated, showLabel = true, className = '' }:
             const timer = setTimeout(() => setJustUpdated(false), 5000);
             return () => clearTimeout(timer);
         }
+        return undefined;
     }, [lastUpdated]);
 
     return (

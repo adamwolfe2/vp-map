@@ -1,4 +1,4 @@
-// @ts-nocheck
+/* eslint-disable */
 // Auto-generated mock data from user CSV
 export const MOCK_DATA = [
   {

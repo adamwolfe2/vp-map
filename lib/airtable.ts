@@ -1,8 +1,10 @@
 // lib/airtable.ts
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // Airtable API client for read-only operations
 
 import Airtable from 'airtable';
-import { VendingpreneurClient, ClientsResponse, AirtableError, Location } from './types';
+import { VendingpreneurClient, Location } from './types';
 import { API_CONFIG, AIRTABLE_FIELD_MAPPING, LOCATIONS_FIELD_MAPPING, US_CANADA_BOUNDS } from './constants';
 import { MOCK_DATA } from './mock_data';
 
@@ -117,7 +119,7 @@ async function fetchLocations(): Promise<Map<string, Location[]>> {
 
     await base(locationsTable)
       .select({ pageSize: 100 })
-      .eachPage((records: any[], fetchNextPage: () => void) => {
+      .eachPage((records: readonly any[], fetchNextPage: () => void) => {
         records.forEach((record: any) => {
           const fields = record.fields;
           const loc: Location = {
@@ -180,7 +182,7 @@ export async function fetchAllClients(): Promise<VendingpreneurClient[]> {
         pageSize: API_CONFIG.airtable.pageSize,
         // We could add filterByFormula here if needed
       })
-      .eachPage((records: any[], fetchNextPage: () => void) => {
+      .eachPage((records: readonly any[], fetchNextPage: () => void) => {
         records.forEach((record: any) => {
           const client = transformAirtableRecord(record);
           clients.push(client);

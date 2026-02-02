@@ -112,8 +112,9 @@ export interface MapFilters {
   membershipLevels: readonly string[];
   minMachines: number;
   maxMachines: number;
-  minRevenue: number;
-  maxRevenue: number;
+  minRevenue?: number;
+  maxRevenue?: number;
+  machineTypes?: string[];
 }
 
 // Stats for dashboard
@@ -214,3 +215,12 @@ export type USState = typeof US_STATES[number];
 // Membership levels
 export const MEMBERSHIP_LEVELS = ['Gold', 'Silver', 'Bronze', 'Platinum'] as const;
 export type MembershipLevel = typeof MEMBERSHIP_LEVELS[number];
+
+export const MACHINE_TYPES = [
+  'Drink',
+  'Snack',
+  'Combo',
+  'Coffee',
+  'Frozen',
+  'Retail'
+] as const;

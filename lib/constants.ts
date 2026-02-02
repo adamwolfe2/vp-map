@@ -70,7 +70,8 @@ export const DEFAULT_FILTERS = {
   maxMachines: 20,
   minRevenue: 0,
   maxRevenue: 10000,
-} as const;
+  machineTypes: [],
+};
 
 // API configuration
 export const API_CONFIG = {

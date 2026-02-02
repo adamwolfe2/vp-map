@@ -45,9 +45,9 @@ export default function MapView({ clients, onClientSelect }: MapViewProps) {
             // 2. Sub-locations (1-5)
             // We check for address. If we have it, we try to get coords from cache or our local state.
             for (let i = 1; i <= 5; i++) {
-                // @ts-ignore - dynamic access
+                // @ts-expect-error - Dynamic access to client location properties
                 const address = client[`location${i}Address`];
-                // @ts-ignore
+                // @ts-expect-error - Dynamic access to client location properties
                 const type = client[`location${i}MachineType`];
 
                 if (address && typeof address === 'string' && address.length > 5) {
@@ -67,40 +67,37 @@ export default function MapView({ clients, onClientSelect }: MapViewProps) {
                             longitude: cached.lng,
                             parentClient: client,
                         });
-                    } else {
-                        // Push a placeholder or trigger geocoding?
-                        // For now we only render what has coords.
-                        // We will trigger geocoding in a useEffect.
                     }
                 }
+            }
 
-                // 3. Linked Locations (Relational)
-                if (client.linkedLocations && client.linkedLocations.length > 0) {
-                    client.linkedLocations.forEach((loc, idx) => {
-                        const addressParts = [loc.address, loc.city, loc.state].filter(Boolean);
-                        if (addressParts.length === 0) return;
+            // 3. Linked Locations (Relational)
+            if (client.linkedLocations && client.linkedLocations.length > 0) {
+                client.linkedLocations.forEach((loc, idx) => {
+                    const addressParts = [loc.address, loc.city, loc.state].filter(Boolean);
+                    if (addressParts.length === 0) return;
 
-                        const fullAddr = addressParts.join(', ');
-                        const cached = geocodeCache.get(fullAddr) || geocodedLocations.get(fullAddr);
+                    const fullAddr = addressParts.join(', ');
+                    const cached = geocodeCache.get(fullAddr) || geocodedLocations.get(fullAddr);
 
-                        if (cached) {
-                            expanded.push({
-                                id: `${client.id}-linked-${loc.id}`,
-                                clientId: client.id,
-                                type: 'SubLocation',
-                                index: 10 + idx, // Offset to avoid collision with 1-5
-                                name: `Location ${idx + 1}`,
-                                address: fullAddr,
-                                machineType: loc.machineType,
-                                latitude: cached.lat,
-                                longitude: cached.lng,
-                                parentClient: client,
-                                revenue: loc.monthlyRevenue
-                            });
-                        }
-                    });
-                }
-            });
+                    if (cached) {
+                        expanded.push({
+                            id: `${client.id}-linked-${loc.id}`,
+                            clientId: client.id,
+                            type: 'SubLocation',
+                            index: 10 + idx, // Offset to avoid collision with 1-5
+                            name: `Location ${idx + 1}`,
+                            address: fullAddr,
+                            machineType: loc.machineType,
+                            latitude: cached.lat,
+                            longitude: cached.lng,
+                            parentClient: client,
+                            revenue: loc.monthlyRevenue
+                        });
+                    }
+                });
+            }
+        });
 
         return expanded;
     }, [clients, geocodedLocations]);
@@ -113,7 +110,7 @@ export default function MapView({ clients, onClientSelect }: MapViewProps) {
 
         clients.forEach(client => {
             for (let i = 1; i <= 5; i++) {
-                // @ts-ignore
+                // @ts-expect-error - Dynamic access to client location properties
                 const address = client[`location${i}Address`];
                 if (address && typeof address === 'string' && address.length > 5) {
                     const fullAddr = address.includes('Chicago') ? address : `${address}, ${client.state || ''}`;
@@ -121,20 +118,21 @@ export default function MapView({ clients, onClientSelect }: MapViewProps) {
                         toGeocode.add(fullAddr);
                     }
                 }
+            }
 
-                // Linked Locations
-                if (client.linkedLocations) {
-                    client.linkedLocations.forEach(loc => {
-                        const addressParts = [loc.address, loc.city, loc.state].filter(Boolean);
-                        if (addressParts.length > 0) {
-                            const fullAddr = addressParts.join(', ');
-                            if (!geocodeCache.has(fullAddr) && !geocodedLocations.has(fullAddr)) {
-                                toGeocode.add(fullAddr);
-                            }
+            // Linked Locations
+            if (client.linkedLocations) {
+                client.linkedLocations.forEach(loc => {
+                    const addressParts = [loc.address, loc.city, loc.state].filter(Boolean);
+                    if (addressParts.length > 0) {
+                        const fullAddr = addressParts.join(', ');
+                        if (!geocodeCache.has(fullAddr) && !geocodedLocations.has(fullAddr)) {
+                            toGeocode.add(fullAddr);
                         }
-                    });
-                }
-            });
+                    }
+                });
+            }
+        });
 
         // Throttle and batch geocoding
         const processQueue = async () => {
@@ -162,7 +160,7 @@ export default function MapView({ clients, onClientSelect }: MapViewProps) {
                             setGeocodedLocations((prev: Map<string, { lat: number, lng: number }>) => new Map(prev).set(addr, { lat, lng }));
                         }
                     }
-                } catch (e) {
+                } catch {
                     console.warn('Geocoding failed for', addr);
                 }
 
@@ -176,15 +174,17 @@ export default function MapView({ clients, onClientSelect }: MapViewProps) {
             return () => clearTimeout(timer);
         }
 
+        return undefined;
+
     }, [clients, geocodedLocations]); // Re-run when clients change, but be careful of loops
 
 
     // Convert expanded locations to GeoJSON
     const geoJsonData = useMemo(() => {
         return {
-            type: 'FeatureCollection',
+            type: 'FeatureCollection' as const,
             features: allLocations.map((loc: ExtendedLocation) => ({
-                type: 'Feature',
+                type: 'Feature' as const,
                 properties: {
                     id: loc.id,
                     clientId: loc.clientId,
@@ -194,7 +194,7 @@ export default function MapView({ clients, onClientSelect }: MapViewProps) {
                     machineType: loc.machineType
                 },
                 geometry: {
-                    type: 'Point',
+                    type: 'Point' as const,
                     coordinates: [loc.longitude!, loc.latitude!]
                 }
             }))
@@ -212,7 +212,7 @@ export default function MapView({ clients, onClientSelect }: MapViewProps) {
             style: MAPBOX_CONFIG.style,
             center: [MAPBOX_CONFIG.initialViewport.longitude, MAPBOX_CONFIG.initialViewport.latitude],
             zoom: MAPBOX_CONFIG.initialViewport.zoom,
-            maxBounds: MAPBOX_CONFIG.maxBounds, // Restrict panning
+            maxBounds: MAPBOX_CONFIG.maxBounds as unknown as mapboxgl.LngLatBoundsLike, // Restrict panning
         });
 
         map.current.on('load', () => {
@@ -329,6 +329,7 @@ export default function MapView({ clients, onClientSelect }: MapViewProps) {
 
                 if (!clusterId || !features || !features[0]) return;
 
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const center = (features[0].geometry as any).coordinates;
 
                 (map.current?.getSource(sourceId) as mapboxgl.GeoJSONSource).getClusterExpansionZoom(

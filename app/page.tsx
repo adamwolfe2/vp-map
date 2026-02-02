@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useDebounce } from 'use-debounce';
-import { motion, AnimatePresence } from 'framer-motion';
 import { AlertTriangle } from 'lucide-react';
 import MapView from '@/components/map/MapView';
 import SearchBar from '@/components/search/SearchBar';
@@ -42,10 +41,37 @@ export default function HomePage() {
       result = result.filter(c => c.membershipLevel && filters.membershipLevels.includes(c.membershipLevel));
     }
 
+
+
     if (filters.minMachines > 0 || filters.maxMachines < 20) {
       result = result.filter(c => {
         const machines = c.totalNumberOfMachines || 0;
         return machines >= filters.minMachines && (filters.maxMachines === 20 || machines <= filters.maxMachines);
+      });
+    }
+
+    if ((filters.minRevenue || 0) > 0 || (filters.maxRevenue || 10000) < 10000) {
+      result = result.filter(c => {
+        const revenue = c.totalMonthlyRevenue || 0;
+        const min = filters.minRevenue || 0;
+        const max = filters.maxRevenue || 10000;
+        return revenue >= min && (max === 10000 || revenue <= max);
+      });
+    }
+
+    if (filters.machineTypes && filters.machineTypes.length > 0) {
+      result = result.filter(c => {
+        // Check flat locations
+        for (let i = 1; i <= 5; i++) {
+          // @ts-expect-error - Dynamic access to client location properties
+          const type = c[`location${i}MachineType`] as string;
+          if (type && filters.machineTypes!.some(t => type.includes(t))) return true;
+        }
+        // Check linked locations
+        if (c.linkedLocations) {
+          return c.linkedLocations.some(l => l.machineType && filters.machineTypes!.some(t => l.machineType?.includes(t)));
+        }
+        return false;
       });
     }
 
