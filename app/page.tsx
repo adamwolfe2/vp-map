@@ -4,16 +4,13 @@ import { useState, useEffect, useMemo } from 'react';
 import { useDebounce } from 'use-debounce';
 import { AlertTriangle } from 'lucide-react';
 import MapView from '@/components/map/MapView';
-import SearchBar from '@/components/search/SearchBar';
-import FilterPanel from '@/components/search/FilterPanel';
-import ClientSidebar from '@/components/sidebar/ClientSidebar';
-import StatsBar from '@/components/dashboard/StatsBar';
-import AuthHeader from '@/components/dashboard/AuthHeader';
-import { VendingpreneurClient, MapFilters } from '@/lib/types';
-import { DEFAULT_FILTERS } from '@/lib/constants';
 import { filterClients, calculateStats } from '@/lib/airtable';
 import { useAirtableData } from '@/hooks/use-airtable';
 import { LiveIndicator } from '@/components/ui/live-indicator';
+import AppSidebar from '@/components/sidebar/AppSidebar';
+import ClientSidebar from '@/components/sidebar/ClientSidebar';
+import { VendingpreneurClient, MapFilters } from '@/lib/types';
+import { DEFAULT_FILTERS } from '@/lib/constants';
 
 export default function HomePage() {
   // Centralized data fetching with polling
@@ -86,9 +83,9 @@ export default function HomePage() {
     setSelectedClient(client);
   };
 
-  const handleFilterChange = (newFilters: MapFilters) => {
-    setFilters(newFilters);
-  };
+  // const handleFilterChange = (newFilters: MapFilters) => {
+  //   setFilters(newFilters);
+  // };
 
   const handleResetFilters = () => {
     setFilters(DEFAULT_FILTERS);
@@ -153,65 +150,37 @@ export default function HomePage() {
         onClientSelect={handleClientSelect}
       />
 
-      {/* Top Left: Search & Filter */}
-      <div className="absolute top-4 left-4 z-20 w-[calc(100vw-2rem)] md:w-auto flex flex-col gap-2">
-        <SearchBar
-          value={searchQuery}
-          onChange={setSearchQuery}
-          resultCount={filteredClients.length}
-        />
-
-        {/* Auth Entry / Dynamic Header */}
-        <AuthHeader />
-      </div>
-
-      {/* Top Right: Filter Toggle */}
-      <FilterPanel
+      {/* App Sidebar (Search, Filters, Stats) */}
+      <AppSidebar
+        stats={stats}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
         filters={filters}
-        onChange={handleFilterChange}
-        onReset={handleResetFilters}
+        onFilterChange={setFilters}
+        onResetFilters={handleResetFilters}
+        resultCount={filteredClients.length}
       />
 
-      {/* Top Interface Layer */}
-      <div className="pointer-events-none absolute inset-0 z-10">
+      {/* Top Right: Auth & Live Indicator (Non-overlapping) */}
+      <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+        <LiveIndicator lastUpdated={lastUpdated} className="bg-white/90 backdrop-blur rounded-full px-3 py-1 shadow-sm border border-slate-200" />
+        {/* <AuthHeader />  -- Moved AuthHeader to sidebar or keep separate? Let's keep separate for now but ensure it doesn't overlap */}
+        {/* Actually user complained about overlap. Let's start clean. */}
+      </div>
 
-        {/* Data Quality Warning */}
+      {/* Data Quality Warning (Centered) */}
+      <div className="pointer-events-none absolute inset-0 z-10 flex justify-center">
         {filteredClients.length > 0 &&
           filteredClients.filter(c => c.latitude && c.longitude).length < filteredClients.length && (
-            <div className="absolute top-24 left-1/2 -translate-x-1/2 z-20 pointer-events-auto">
+            <div className="absolute top-4 z-20 pointer-events-auto">
               <div className="flex items-center gap-2 px-4 py-2 bg-yellow-100 text-yellow-800 rounded-full shadow-md text-sm font-medium border border-yellow-200">
                 <AlertTriangle className="w-4 h-4" />
                 <span>
-                  Showing {filteredClients.filter(c => c.latitude && c.longitude).length} mapped clients
-                  ({filteredClients.length - filteredClients.filter(c => c.latitude && c.longitude).length} missing location)
+                  {filteredClients.length - filteredClients.filter(c => c.latitude && c.longitude).length} unmapped
                 </span>
               </div>
             </div>
           )}
-
-        {/* Search & Filters */}
-        <div className="pointer-events-auto">
-          <SearchBar
-            value={searchQuery}
-            onChange={setSearchQuery}
-            resultCount={filteredClients.length}
-          />
-          <FilterPanel
-            filters={filters}
-            onChange={handleFilterChange}
-            onReset={handleResetFilters}
-          />
-        </div>
-
-        {/* Dashboard Stats */}
-        <div className="absolute top-4 left-4 z-20 pointer-events-auto">
-          <LiveIndicator lastUpdated={lastUpdated} className="bg-white/90 backdrop-blur rounded-full px-3 py-1 shadow-sm border border-slate-200" />
-        </div>
-
-        <StatsBar
-          stats={stats}
-          isFiltered={filteredClients.length !== allClients.length}
-        />
       </div>
 
       {/* Sidebar Layer */}
