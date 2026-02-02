@@ -41,7 +41,15 @@ const transformAirtableRecord = (record: any): VendingpreneurClient => {
     clientId: String(fields[AIRTABLE_FIELD_MAPPING.clientId] || ''),
     firstName: fields[AIRTABLE_FIELD_MAPPING.firstName] ? String(fields[AIRTABLE_FIELD_MAPPING.firstName]) : undefined,
     lastName: fields[AIRTABLE_FIELD_MAPPING.lastName] ? String(fields[AIRTABLE_FIELD_MAPPING.lastName]) : undefined,
-    membershipLevel: (fields[AIRTABLE_FIELD_MAPPING.membershipLevel] as any) || null,
+    membershipLevel: (() => {
+      const raw = fields[AIRTABLE_FIELD_MAPPING.membershipLevel];
+      if (!raw) return 'Expired';
+
+      const val = Array.isArray(raw) ? raw[0] : raw;
+      const str = String(val).trim();
+      // Capitalize first letter, lower remaining (e.g. "gold" -> "Gold")
+      return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+    })() as any,
     status: String(fields[AIRTABLE_FIELD_MAPPING.status] || ''),
     dateAdded: fields[AIRTABLE_FIELD_MAPPING.dateAdded],
     programStartDate: fields[AIRTABLE_FIELD_MAPPING.programStartDate],
