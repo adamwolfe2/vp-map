@@ -73,8 +73,34 @@ export default function MapView({ clients, onClientSelect }: MapViewProps) {
                         // We will trigger geocoding in a useEffect.
                     }
                 }
-            }
-        });
+
+                // 3. Linked Locations (Relational)
+                if (client.linkedLocations && client.linkedLocations.length > 0) {
+                    client.linkedLocations.forEach((loc, idx) => {
+                        const addressParts = [loc.address, loc.city, loc.state].filter(Boolean);
+                        if (addressParts.length === 0) return;
+
+                        const fullAddr = addressParts.join(', ');
+                        const cached = geocodeCache.get(fullAddr) || geocodedLocations.get(fullAddr);
+
+                        if (cached) {
+                            expanded.push({
+                                id: `${client.id}-linked-${loc.id}`,
+                                clientId: client.id,
+                                type: 'SubLocation',
+                                index: 10 + idx, // Offset to avoid collision with 1-5
+                                name: `Location ${idx + 1}`,
+                                address: fullAddr,
+                                machineType: loc.machineType,
+                                latitude: cached.lat,
+                                longitude: cached.lng,
+                                parentClient: client,
+                                revenue: loc.monthlyRevenue
+                            });
+                        }
+                    });
+                }
+            });
 
         return expanded;
     }, [clients, geocodedLocations]);
@@ -95,8 +121,20 @@ export default function MapView({ clients, onClientSelect }: MapViewProps) {
                         toGeocode.add(fullAddr);
                     }
                 }
-            }
-        });
+
+                // Linked Locations
+                if (client.linkedLocations) {
+                    client.linkedLocations.forEach(loc => {
+                        const addressParts = [loc.address, loc.city, loc.state].filter(Boolean);
+                        if (addressParts.length > 0) {
+                            const fullAddr = addressParts.join(', ');
+                            if (!geocodeCache.has(fullAddr) && !geocodedLocations.has(fullAddr)) {
+                                toGeocode.add(fullAddr);
+                            }
+                        }
+                    });
+                }
+            });
 
         // Throttle and batch geocoding
         const processQueue = async () => {

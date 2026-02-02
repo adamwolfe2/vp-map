@@ -146,6 +146,19 @@ export const AIRTABLE_FIELD_MAPPING = {
   notes: 'Notes',
 } as const;
 
+export const LOCATIONS_FIELD_MAPPING = {
+  id: 'id',
+  address: 'Address',
+  city: 'City',
+  state: 'State',
+  zip: 'Zip Code',
+  machineType: 'Machine Type',
+  propertyType: 'Property Type',
+  monthlyRevenue: 'Monthly Revenue',
+  machinesCount: 'Number of Machines',
+  client: 'Client', // Linked record to Clients table
+} as const;
+
 // Responsive breakpoints (Tailwind defaults)
 export const BREAKPOINTS = {
   sm: 640,

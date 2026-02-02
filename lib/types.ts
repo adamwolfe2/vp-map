@@ -80,24 +80,20 @@ export interface VendingpreneurClient {
   skoolJoinDate?: string;
   salesRep?: string;
   notes?: string;
+  linkedLocations?: Location[]; // From new Locations table
 }
 
 export interface Location {
   id: string;
-  locationName: string;
-  propertyType?: string;
-  placementLocation?: string;
-  locationType?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zip?: string;
   machineType?: string;
-  unitCount?: number;
-  numberOfEmployees?: number;
-  footTraffic?: number;
-  numberOfMachines?: number;
+  propertyType?: string;
   monthlyRevenue?: number;
-  revenuePerMachine?: number;
-  smartTags?: string[];
-  latitude?: number;
-  longitude?: number;
+  machinesCount?: number;
+  clientId?: string[]; // Array of linked record IDs
 }
 
 // Normalized location data for UI display

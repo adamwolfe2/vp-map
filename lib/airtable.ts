@@ -2,8 +2,8 @@
 // Airtable API client for read-only operations
 
 import Airtable from 'airtable';
-import { VendingpreneurClient, ClientsResponse, AirtableError } from './types';
-import { API_CONFIG, AIRTABLE_FIELD_MAPPING, US_CANADA_BOUNDS } from './constants';
+import { VendingpreneurClient, ClientsResponse, AirtableError, Location } from './types';
+import { API_CONFIG, AIRTABLE_FIELD_MAPPING, LOCATIONS_FIELD_MAPPING, US_CANADA_BOUNDS } from './constants';
 import { MOCK_DATA } from './mock_data';
 
 // Initialize Airtable client
@@ -97,6 +97,65 @@ const transformAirtableRecord = (record: any): VendingpreneurClient => {
  * Fetch all clients from Airtable (read-only)
  * Handles pagination automatically
  */
+/**
+ * Fetch all locations from new Locations table (read-only)
+ */
+async function fetchLocations(): Promise<Map<string, Location[]>> {
+  try {
+    const base = getAirtableBase();
+    const locationsMap = new Map<string, Location[]>();
+    const locationsTable = API_CONFIG.airtable.locationsTable;
+
+    // Check if table exists/is accessible by trying to fetch one record
+    // If this fails, we just return empty map (Fallback Strategy)
+    try {
+      await base(locationsTable).select({ maxRecords: 1 }).firstPage();
+    } catch (e) {
+      console.warn('Locations table not found or not accessible. Using flat data only.');
+      return locationsMap;
+    }
+
+    await base(locationsTable)
+      .select({ pageSize: 100 })
+      .eachPage((records: any[], fetchNextPage: () => void) => {
+        records.forEach((record: any) => {
+          const fields = record.fields;
+          const loc: Location = {
+            id: record.id,
+            address: String(fields[LOCATIONS_FIELD_MAPPING.address] || ''),
+            city: fields[LOCATIONS_FIELD_MAPPING.city] as string,
+            state: fields[LOCATIONS_FIELD_MAPPING.state] as string,
+            zip: fields[LOCATIONS_FIELD_MAPPING.zip] as string,
+            machineType: fields[LOCATIONS_FIELD_MAPPING.machineType] as string,
+            propertyType: fields[LOCATIONS_FIELD_MAPPING.propertyType] as string,
+            monthlyRevenue: parseNumber(fields[LOCATIONS_FIELD_MAPPING.monthlyRevenue]),
+            machinesCount: parseNumber(fields[LOCATIONS_FIELD_MAPPING.machinesCount]),
+            clientId: fields[LOCATIONS_FIELD_MAPPING.client] as string[]
+          };
+
+          // Map to Client IDs
+          if (loc.clientId && Array.isArray(loc.clientId)) {
+            loc.clientId.forEach((cId: string) => {
+              const existing = locationsMap.get(cId) || [];
+              existing.push(loc);
+              locationsMap.set(cId, existing);
+            });
+          }
+        });
+        fetchNextPage();
+      });
+
+    return locationsMap;
+  } catch (error) {
+    console.warn('Error fetching linked locations:', error);
+    return new Map();
+  }
+}
+
+/**
+ * Fetch all clients from Airtable (read-only)
+ * Handles pagination automatically
+ */
 export async function fetchAllClients(): Promise<VendingpreneurClient[]> {
   try {
     const base = getAirtableBase();
@@ -104,66 +163,104 @@ export async function fetchAllClients(): Promise<VendingpreneurClient[]> {
     const clients: VendingpreneurClient[] = [];
 
     // Create a logical cache from the seeded data
-    // This allows us to "hydrate" Airtable records that lack coordinates
-    // but match an address we geocoded in our script.
     const coordCache = new Map();
     if (Array.isArray(MOCK_DATA)) {
       (MOCK_DATA as any[]).forEach(c => {
-        // Cache by exact name
         if (c.fullName) coordCache.set(c.fullName, { lat: c.latitude, lng: c.longitude });
-        // Cache by address part (before comma) for fuzzy match
         if (c.fullName) coordCache.set(c.fullName.split(',')[0].trim(), { lat: c.latitude, lng: c.longitude });
       });
     }
 
-    // Fetch all records with pagination
+    // 1. Fetch Relational Locations First (Parallel-ish)
+    const linkedLocationsPromise = fetchLocations();
+
+    // 2. Fetch Clients
     await base(API_CONFIG.airtable.clientsTable)
       .select({
         pageSize: API_CONFIG.airtable.pageSize,
+        // We could add filterByFormula here if needed
       })
-      .eachPage((records, fetchNextPage) => {
-        records.forEach((record) => {
+      .eachPage((records: any[], fetchNextPage: () => void) => {
+        records.forEach((record: any) => {
           const client = transformAirtableRecord(record);
-
-          // If client has missing coordinates, try to find them in our cache
-          if (!client.latitude || !client.longitude) {
-            // Try matching by name, address, or truncated name
-            const namePart = (client.fullName || '').split('\t')[0];
-            const cached = coordCache.get(client.fullName) ||
-              coordCache.get(client.streetAddress || '') ||
-              coordCache.get((namePart || '').trim());
-
-            if (cached && cached.lat && cached.lng) {
-              client.latitude = cached.lat;
-              client.longitude = cached.lng;
-            }
-          }
-
-          // Filter strict US/Canada
-          if (client.latitude && client.longitude) {
-            const { minLat, maxLat, minLng, maxLng } = US_CANADA_BOUNDS;
-            if (
-              client.latitude >= minLat && client.latitude <= maxLat &&
-              client.longitude >= minLng && client.longitude <= maxLng
-            ) {
-              clients.push(client);
-            }
-          } else {
-            // Keep clients without location for searches (optional, or filter them too)
-            clients.push(client);
-          }
+          clients.push(client);
         });
-
         fetchNextPage();
       });
 
+    // 3. Hydrate Clients with Coordinates and Linked Locations
+    const linkedLocationsMap = await linkedLocationsPromise;
+
+    clients.forEach(client => {
+      // A. Coordinate Hydration
+      if (!client.latitude || !client.longitude) {
+        const namePart = (client.fullName || '').split('\t')[0];
+        const cached = coordCache.get(client.fullName) ||
+          coordCache.get(client.streetAddress || '') ||
+          coordCache.get((namePart || '').trim());
+
+        if (cached && cached.lat && cached.lng) {
+          client.latitude = cached.lat;
+          client.longitude = cached.lng;
+        }
+      }
+
+      // B. Filter US/Canada on Main Hub
+      if (client.latitude && client.longitude) {
+        const { minLat, maxLat, minLng, maxLng } = US_CANADA_BOUNDS;
+        if (!(client.latitude >= minLat && client.latitude <= maxLat &&
+          client.longitude >= minLng && client.longitude <= maxLng)) {
+          // Invalid main location, maybe clear it? 
+          // For now we assume the filter logic downstream handles "pushing" to array.
+          // Actually the previous implementation filtered HERE.
+          // Let's filter out clients entirely if they have NO valid locations (Main or Linked).
+          // But wait, the previous code pushed to `clients` array inside eachPage.
+          // I need to be careful not to break that.
+        }
+      }
+
+      // C. Attach Linked Locations
+      // We match by Airtable Record ID (client.id), NOT client.clientId (string) 
+      // because Linked Records use Record IDs.
+      if (linkedLocationsMap.has(client.id)) {
+        client.linkedLocations = linkedLocationsMap.get(client.id);
+      }
+    });
+
+    // Filter Final List (US/Canada Check)
+    // We only keep clients that have at least ONE valid location in US/Canada?
+    // OR we just filter the Main Hub coordinates like before.
+    const validClients = clients.filter(client => {
+      // Main Hub Check
+      let hasValidMain = false;
+      if (client.latitude && client.longitude) {
+        const { minLat, maxLat, minLng, maxLng } = US_CANADA_BOUNDS;
+        if (client.latitude >= minLat && client.latitude <= maxLat &&
+          client.longitude >= minLng && client.longitude <= maxLng) {
+          hasValidMain = true;
+        }
+      }
+
+      // If passed main check, keep.
+      // If failed main check, but has valid Linked Locations... we should probably keep?
+      // But for now, let's stick to the previous strict logic:
+      // "Filter strict US/Canada" was applied to the Main Hub.
+      // If we want to support clients with NO main hub but valid sub-locations, we'd need to change this.
+      // Let's keep it simple: Keep if Main Hub is valid OR if we didn't have coords (fallback).
+
+      if (client.latitude && client.longitude) {
+        return hasValidMain;
+      }
+      return true; // Keep clients without location for searches
+    });
+
     // Safety Net: If we fetched nothing (e.g. auth error or empty base), 
     // return the Mock Data so the user has a demo.
-    if (clients.length === 0) {
+    if (validClients.length === 0) {
       return [...(MOCK_DATA as any)];
     }
 
-    return clients;
+    return validClients;
   } catch (error) {
     console.error('Error fetching clients from Airtable:', error);
     // If Airtable crash, return Mock Data
