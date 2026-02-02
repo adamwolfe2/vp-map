@@ -117,11 +117,7 @@ export default function HomePage() {
   // Performance Logging
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
-      const start = performance.now();
       // Trigger measurement
-      const end = performance.now();
-      console.log(`Filter applied in ${(end - start).toFixed(2)}ms`);
-      console.log(`Showing ${filteredClients.length} of ${allClients.length} clients`);
     }
   }, [allClients, debouncedSearch, filters, filteredClients.length]);
 

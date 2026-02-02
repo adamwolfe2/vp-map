@@ -31,7 +31,6 @@ export function ClientSheet({ client, trigger, open, onOpenChange }: ClientSheet
     };
 
     const handleSave = () => {
-        console.log('Saving client:', formData);
         // Here we would call an API/Mutation to update the client
         if (onOpenChange) onOpenChange(false);
     };

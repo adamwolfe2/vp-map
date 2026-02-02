@@ -174,7 +174,7 @@ export default function MapView({ clients, selectedClient, onClientSelect }: Map
             const addresses = Array.from(toGeocode).slice(0, 10); // Process 10 at a time to avoid rate limits
             if (addresses.length === 0) return;
 
-            console.log(`Attempting to geocode ${addresses.length} sub-locations...`);
+
 
             for (const addr of addresses) {
                 if (geocodeCache.has(addr)) continue;
@@ -568,7 +568,7 @@ export default function MapView({ clients, selectedClient, onClientSelect }: Map
 
     const saveTerritory = () => {
         const data = draw.current?.getAll();
-        console.log('Saved Territory:', data);
+
         setIsDrawing(false);
         // In a real app, send to API
     };
