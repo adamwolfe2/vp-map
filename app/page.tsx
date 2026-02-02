@@ -12,39 +12,17 @@ import StatsBar from '@/components/dashboard/StatsBar';
 import { VendingpreneurClient, MapFilters } from '@/lib/types';
 import { DEFAULT_FILTERS } from '@/lib/constants';
 import { filterClients, calculateStats } from '@/lib/airtable';
+import { useAirtableData } from '@/hooks/use-airtable';
+import { LiveIndicator } from '@/components/ui/live-indicator';
 
 export default function HomePage() {
-  const [allClients, setAllClients] = useState<VendingpreneurClient[]>([]);
+  // Centralized data fetching with polling
+  const { clients: allClients, isLoading, lastUpdated } = useAirtableData();
+
   const [selectedClient, setSelectedClient] = useState<VendingpreneurClient | null>(null);
   const [filters, setFilters] = useState<MapFilters>(DEFAULT_FILTERS);
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch] = useDebounce(searchQuery, 300);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Fetch clients on mount and every 30 seconds
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const response = await fetch('/api/clients');
-        const data = await response.json();
-
-        if (data.success) {
-          setAllClients(data.data);
-        }
-      } catch (error) {
-        console.error('Failed to fetch clients:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    fetchData();
-
-    // Poll every 30 seconds
-    const intervalId = setInterval(fetchData, 30000);
-
-    return () => clearInterval(intervalId);
-  }, []);
 
   // Compute filtered clients efficiently
   const filteredClients = useMemo(() => {
@@ -185,6 +163,10 @@ export default function HomePage() {
         </div>
 
         {/* Dashboard Stats */}
+        <div className="absolute top-4 left-4 z-20 pointer-events-auto">
+          <LiveIndicator lastUpdated={lastUpdated} className="bg-white/90 backdrop-blur rounded-full px-3 py-1 shadow-sm border border-slate-200" />
+        </div>
+
         <StatsBar
           stats={stats}
           isFiltered={filteredClients.length !== allClients.length}
