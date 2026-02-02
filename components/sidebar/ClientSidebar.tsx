@@ -16,6 +16,8 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
+import { useAuth } from '@/contexts/AuthContext';
+import { useRouter } from 'next/navigation';
 
 interface ClientSidebarProps {
     client: VendingpreneurClient;
@@ -29,6 +31,8 @@ export default function ClientSidebar({ client, isOpen, onClose }: ClientSidebar
     const isDesktop = useMediaQuery('(min-width: 768px)');
     const membershipColor = MEMBERSHIP_COLORS[client.membershipLevel || 'Expired'];
     const [activeTab, setActiveTab] = useState<Tab>('overview');
+    const { user, isAuthenticated } = useAuth();
+    const router = useRouter();
 
     const SidebarContent = () => (
         <div className="flex flex-col h-full bg-slate-50/30">
@@ -143,7 +147,25 @@ export default function ClientSidebar({ client, isOpen, onClose }: ClientSidebar
             </div>
 
             {/* Footer Actions */}
-            <div className="p-4 border-t bg-white">
+            <div className="p-4 border-t bg-white space-y-2">
+                {isAuthenticated && user?.id === client.id ? (
+                    <Button
+                        className="w-full bg-emerald-600 hover:bg-emerald-700"
+                        onClick={() => router.push('/portal')}
+                    >
+                        <LayoutDashboard className="h-4 w-4 mr-2" />
+                        Manage My Profile
+                    </Button>
+                ) : !isAuthenticated ? (
+                    <Button
+                        variant="default"
+                        className="w-full"
+                        onClick={() => router.push('/login')}
+                    >
+                        Claim This Profile
+                    </Button>
+                ) : null}
+
                 <a
                     href={getAirtableRecordUrl(client.id)}
                     target="_blank"

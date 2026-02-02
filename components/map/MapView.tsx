@@ -8,13 +8,14 @@ import { MAPBOX_CONFIG, MEMBERSHIP_COLORS, US_CANADA_BOUNDS } from '@/lib/consta
 
 interface MapViewProps {
     clients: VendingpreneurClient[];
+    selectedClient: VendingpreneurClient | null;
     onClientSelect: (client: VendingpreneurClient) => void;
 }
 
 // Memory cache for geocoding to prevent excessive API calls
 const geocodeCache = new Map<string, { lat: number; lng: number }>();
 
-export default function MapView({ clients, onClientSelect }: MapViewProps) {
+export default function MapView({ clients, selectedClient, onClientSelect }: MapViewProps) {
     const mapContainer = useRef<HTMLDivElement>(null);
     const map = useRef<mapboxgl.Map | null>(null);
     const [isMapLoaded, setIsMapLoaded] = useState(false);
@@ -372,6 +373,17 @@ export default function MapView({ clients, onClientSelect }: MapViewProps) {
             map.current.on('mouseleave', 'unclustered-point', handleMouseLeave);
         }
     }, [geoJsonData, isMapLoaded, clients, onClientSelect]);
+
+    // Fly to selected client
+    useEffect(() => {
+        if (!map.current || !selectedClient || !selectedClient.latitude || !selectedClient.longitude) return;
+
+        map.current.flyTo({
+            center: [selectedClient.longitude, selectedClient.latitude],
+            zoom: 14,
+            essential: true
+        });
+    }, [selectedClient]);
 
     return (
         <div className="relative w-full h-full bg-slate-200">

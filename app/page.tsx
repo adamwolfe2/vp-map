@@ -8,6 +8,7 @@ import SearchBar from '@/components/search/SearchBar';
 import FilterPanel from '@/components/search/FilterPanel';
 import ClientSidebar from '@/components/sidebar/ClientSidebar';
 import StatsBar from '@/components/dashboard/StatsBar';
+import AuthHeader from '@/components/dashboard/AuthHeader';
 import { VendingpreneurClient, MapFilters } from '@/lib/types';
 import { DEFAULT_FILTERS } from '@/lib/constants';
 import { filterClients, calculateStats } from '@/lib/airtable';
@@ -138,9 +139,9 @@ export default function HomePage() {
 
         {/* Loading text */}
         <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center space-y-2">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto" />
-            <p className="text-sm text-muted-foreground">Loading map...</p>
+          <div className="bg-white px-6 py-4 rounded-lg shadow-xl flex items-center gap-3">
+            <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            <span className="font-medium">Loading map data...</span>
           </div>
         </div>
       </div>
@@ -148,14 +149,32 @@ export default function HomePage() {
   }
 
   return (
-    <main className="relative w-full h-screen overflow-hidden bg-gray-50">
-      {/* Map Layer */}
-      <div className="absolute inset-0 z-0">
-        <MapView
-          clients={filteredClients}
-          onClientSelect={handleClientSelect}
+    <main className="relative h-screen w-screen overflow-hidden bg-slate-50">
+      {/* Map View */}
+      <MapView
+        clients={filteredClients}
+        selectedClient={selectedClient}
+        onClientSelect={handleClientSelect}
+      />
+
+      {/* Top Left: Search & Filter */}
+      <div className="absolute top-4 left-4 z-20 w-[calc(100vw-2rem)] md:w-auto flex flex-col gap-2">
+        <SearchBar
+          value={searchQuery}
+          onChange={setSearchQuery}
+          resultCount={filteredClients.length}
         />
+
+        {/* Auth Entry / Dynamic Header */}
+        <AuthHeader />
       </div>
+
+      {/* Top Right: Filter Toggle */}
+      <FilterPanel
+        filters={filters}
+        onChange={handleFilterChange}
+        onReset={handleResetFilters}
+      />
 
       {/* Top Interface Layer */}
       <div className="pointer-events-none absolute inset-0 z-10">
