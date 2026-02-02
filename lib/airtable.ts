@@ -3,7 +3,7 @@
 
 import Airtable from 'airtable';
 import { VendingpreneurClient, ClientsResponse, AirtableError } from './types';
-import { API_CONFIG, AIRTABLE_FIELD_MAPPING } from './constants';
+import { API_CONFIG, AIRTABLE_FIELD_MAPPING, US_CANADA_BOUNDS } from './constants';
 import { MOCK_DATA } from './mock_data';
 
 // Initialize Airtable client
@@ -139,7 +139,19 @@ export async function fetchAllClients(): Promise<VendingpreneurClient[]> {
             }
           }
 
-          clients.push(client);
+          // Filter strict US/Canada
+          if (client.latitude && client.longitude) {
+            const { minLat, maxLat, minLng, maxLng } = US_CANADA_BOUNDS;
+            if (
+              client.latitude >= minLat && client.latitude <= maxLat &&
+              client.longitude >= minLng && client.longitude <= maxLng
+            ) {
+              clients.push(client);
+            }
+          } else {
+            // Keep clients without location for searches (optional, or filter them too)
+            clients.push(client);
+          }
         });
 
         fetchNextPage();

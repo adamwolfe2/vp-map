@@ -5,21 +5,21 @@ export const COLORS = {
   // Modern Amenities Brand
   primary: '#00B67A',
   primaryHover: '#00A36A',
-  
+
   // Background & Text
   background: '#FFFFFF',
   textPrimary: '#0A0A0A',
   textSecondary: '#525252',
   border: '#E5E5E5',
   hover: '#FAFAFA',
-  
+
   // Membership Colors
   gold: '#FFD700',
   silver: '#C0C0C0',
   bronze: '#CD7F32',
   platinum: '#E5E4E2',
   expired: '#999999',
-  
+
   // Status Colors
   success: '#22C55E',
   warning: '#F59E0B',
@@ -46,6 +46,19 @@ export const MAPBOX_CONFIG = {
   },
   clusterRadius: 50,
   clusterMaxZoom: 14,
+  // Restrict to North America (US/Canada focus)
+  maxBounds: [
+    [-179.9, 15.0], // Southwest coordinates (Hawaii/Pacific)
+    [-50.0, 85.0]   // Northeast coordinates (Greenland/Canada)
+  ],
+} as const;
+
+// Geographic bounds for data filtering (strict US/Canada filtering)
+export const US_CANADA_BOUNDS = {
+  minLat: 18.0,   // Southern US (approx)
+  maxLat: 85.0,   // Northern Canada
+  minLng: -180.0, // Western Aleutians
+  maxLng: -50.0,  // Eastern Canada
 } as const;
 
 // Filter defaults

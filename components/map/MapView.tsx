@@ -48,6 +48,7 @@ export default function MapView({ clients, onClientSelect }: MapViewProps) {
             style: MAPBOX_CONFIG.style,
             center: [MAPBOX_CONFIG.initialViewport.longitude, MAPBOX_CONFIG.initialViewport.latitude],
             zoom: MAPBOX_CONFIG.initialViewport.zoom,
+            maxBounds: MAPBOX_CONFIG.maxBounds, // Restrict panning
         });
 
         map.current.on('load', () => {
