@@ -1,10 +1,15 @@
 'use client';
 
-import { useEffect, useRef, useState, useMemo } from 'react';
+import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
+import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
 import { VendingpreneurClient, ExtendedLocation } from '@/lib/types';
 import { MAPBOX_CONFIG, MEMBERSHIP_COLORS, US_CANADA_BOUNDS } from '@/lib/constants';
+import TerritoryControls from './TerritoryControls';
+import RoutePanel from './RoutePanel';
+import { optimizeRoute } from '@/lib/routing';
+import MapboxDraw from '@mapbox/mapbox-gl-draw';
 
 interface MapViewProps {
     clients: VendingpreneurClient[];
@@ -18,7 +23,16 @@ const geocodeCache = new Map<string, { lat: number; lng: number }>();
 export default function MapView({ clients, selectedClient, onClientSelect }: MapViewProps) {
     const mapContainer = useRef<HTMLDivElement>(null);
     const map = useRef<mapboxgl.Map | null>(null);
+    const draw = useRef<MapboxDraw | null>(null);
     const [isMapLoaded, setIsMapLoaded] = useState(false);
+
+    // Routing State
+    const [routeStops, setRouteStops] = useState<ExtendedLocation[]>([]);
+    const [isOptimized, setIsOptimized] = useState(false);
+
+    // Territory Drawing State
+    const [isDrawing, setIsDrawing] = useState(false);
+    const [hasShape, setHasShape] = useState(false);
 
     // State to store geocoded locations (address -> coords)
     const [geocodedLocations, setGeocodedLocations] = useState<Map<string, { lat: number, lng: number }>>(new Map());
@@ -42,6 +56,26 @@ export default function MapView({ clients, selectedClient, onClientSelect }: Map
                     parentClient: client,
                 });
             }
+            // Assuming 'el' and 'loc' would be defined in a context where a marker element is being created.
+            // For a Mapbox GL JS map, click handlers are typically added to layers, not directly to data objects.
+            // The following code is placed as per the instruction, but it would require 'el' to be a DOM element
+            // representing a marker and 'loc' to be the ExtendedLocation object being processed.
+            // In a typical Mapbox GL JS setup, you'd use map.on('click', 'layer-id', ...) to handle feature clicks.
+            // This snippet would only work if custom HTML markers were being created here.
+            // As the instruction is to "make the change faithfully", it's inserted as requested.
+            // It's likely this code needs to be moved to where actual marker elements are rendered.
+            // el.addEventListener('click', (e) => {
+            // e.stopPropagation(); // Prevent map click
+
+            // // If Shift Key is held, add to route
+            // if (e.shiftKey || e.metaKey) {
+            //     handleAddToRoute(loc); // handleAddToRoute is not defined in this scope
+            //     return;
+            // }
+
+            // onClientSelect(loc.parentClient);
+            // });
+
 
             // 2. Sub-locations (1-5)
             // We check for address. If we have it, we try to get coords from cache or our local state.
@@ -246,6 +280,74 @@ export default function MapView({ clients, selectedClient, onClientSelect }: Map
                 clusterRadius: MAPBOX_CONFIG.clusterRadius,
             });
 
+            // Add 3D buildings layer
+            map.current.addLayer({
+                'id': '3d-buildings',
+                'source': 'composite',
+                'source-layer': 'building',
+                'filter': ['==', 'extrude', 'true'],
+                'type': 'fill-extrusion',
+                'minzoom': 14,
+                'paint': {
+                    'fill-extrusion-color': '#aaa',
+                    'fill-extrusion-height': [
+                        'interpolate', ['linear'], ['zoom'],
+                        14, 0,
+                        14.05, ['get', 'height']
+                    ],
+                    'fill-extrusion-base': [
+                        'interpolate', ['linear'], ['zoom'],
+                        14, 0,
+                        14.05, ['get', 'min_height']
+                    ],
+                    'fill-extrusion-opacity': 0.6
+                }
+            });
+
+            // Initialize Draw
+            draw.current = new MapboxDraw({
+                displayControlsDefault: false,
+                controls: {
+                    polygon: true,
+                    trash: true
+                },
+                defaultMode: 'simple_select'
+            });
+
+            map.current.addControl(draw.current, 'top-left');
+
+            // Draw Event Listeners to update UI state
+            map.current.on('draw.create', () => setHasShape(true));
+            map.current.on('draw.delete', () => setHasShape(false));
+            map.current.on('draw.update', () => setHasShape(true));
+
+            // Route Line Layer (Empty initially)
+            map.current.addSource('route', {
+                type: 'geojson',
+                data: {
+                    type: 'Feature',
+                    properties: {},
+                    geometry: {
+                        type: 'LineString',
+                        coordinates: []
+                    }
+                }
+            });
+
+            map.current.addLayer({
+                id: 'route-line',
+                type: 'line',
+                source: 'route',
+                layout: {
+                    'line-join': 'round',
+                    'line-cap': 'round'
+                },
+                paint: {
+                    'line-color': '#3b82f6', // Blue-500
+                    'line-width': 4,
+                    'line-opacity': 0.8
+                }
+            });
             // 1. Clusters Layer (Circles)
             map.current.addLayer({
                 id: 'clusters',
@@ -274,7 +376,6 @@ export default function MapView({ clients, selectedClient, onClientSelect }: Map
                 }
             });
 
-            // 2. Cluster Count Labels
             map.current.addLayer({
                 id: 'cluster-count',
                 type: 'symbol',
@@ -351,6 +452,25 @@ export default function MapView({ clients, selectedClient, onClientSelect }: Map
                 const feature = e.features?.[0];
                 const clientId = feature?.properties?.clientId; // NOTE: Changed from id to clientId
 
+                // If Shift Key is held, add to route
+                if (e.originalEvent.shiftKey || e.originalEvent.metaKey) {
+                    const client = clients.find(c => c.id === clientId);
+                    if (client) {
+                        // We need to construct the ExtendedLocation object again ideally, 
+                        // or we can find it in allLocations if we wanted to be efficient.
+                        // For now, let's just create a basic one or look it up.
+                        // Actually, let's just pass what we can. 
+                        // BETTER: Just find it in the clients array and map it to ExtendedLocation logic?
+                        // Simpler: The feature properties ALREADY contain what we need?
+                        // Yes, let's use allLocations to find it.
+                        const loc = allLocations.find(l => l.clientId === clientId && l.type === 'Main'); // Default to main
+                        if (loc) {
+                            handleAddToRoute(loc);
+                            return;
+                        }
+                    }
+                }
+
                 if (clientId) {
                     const client = clients.find(c => c.id === clientId);
                     if (client) {
@@ -374,9 +494,98 @@ export default function MapView({ clients, selectedClient, onClientSelect }: Map
         }
     }, [geoJsonData, isMapLoaded, clients, onClientSelect]);
 
-    // Fly to selected client
+    // --- Routing Handlers ---
+    const handleAddToRoute = (location: ExtendedLocation) => {
+        if (routeStops.find(l => l.id === location.id)) return; // No duplicates
+        setRouteStops(prev => [...prev, location]);
+        setIsOptimized(false);
+    };
+
+    const handleRemoveStop = (id: string) => {
+        setRouteStops(prev => prev.filter(s => s.id !== id));
+        setIsOptimized(false);
+    };
+
+    const handleOptimize = useCallback(() => {
+        if (routeStops.length < 2) return;
+        const optimized = optimizeRoute(routeStops[0]!, routeStops);
+        setRouteStops(optimized);
+        setIsOptimized(true);
+
+        // Update map layer
+        const coordinates = optimized.map(l => [l.longitude, l.latitude]);
+        const geojson: GeoJSON.Feature<GeoJSON.LineString> = {
+            type: 'Feature',
+            properties: {},
+            geometry: {
+                type: 'LineString',
+                coordinates: coordinates as number[][]
+            }
+        };
+
+        if (map.current?.getSource('route')) {
+            (map.current.getSource('route') as mapboxgl.GeoJSONSource).setData(geojson);
+        }
+    }, [routeStops]);
+
+    const handleClearRoute = () => {
+        setRouteStops([]);
+        setIsOptimized(false);
+        if (map.current?.getSource('route')) {
+            (map.current.getSource('route') as mapboxgl.GeoJSONSource).setData({
+                type: 'Feature',
+                properties: {},
+                geometry: { type: 'LineString', coordinates: [] }
+            });
+        }
+    };
+
+    // --- Drawing Handlers ---
+    const startDrawing = () => {
+        if (!draw.current) return;
+        draw.current.changeMode('draw_polygon');
+        setIsDrawing(true);
+    };
+
+    const clearDrawing = () => {
+        if (!draw.current) return;
+        draw.current.deleteAll();
+        setHasShape(false);
+        setIsDrawing(false);
+    };
+
+    const saveTerritory = () => {
+        const data = draw.current?.getAll();
+        console.log('Saved Territory:', data);
+        setIsDrawing(false);
+        // In a real app, send to API
+    };
+
+    // --- Overlay logic ---
+    // Update Draw state based on mode changes (if user presses Esc)
+    useEffect(() => {
+        if (!map.current) return;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const onModeChange = (e: any) => {
+            if (e.mode === 'simple_select') {
+                setIsDrawing(false);
+            }
+        };
+        map.current.on('draw.modechange', onModeChange);
+        return () => {
+            map.current?.off('draw.modechange', onModeChange);
+        };
+    }, []);
+
+
     useEffect(() => {
         if (!map.current || !selectedClient || !selectedClient.latitude || !selectedClient.longitude) return;
+
+        // Add to route if "Route Mode" is implicit? 
+        // For now, let's just make sure we center. 
+        // We will add specific UI buttons in the Popup later if needed, 
+        // but for now let's add a double-click handler or similar?
+        // Actually, let's stick to the RoutePanel being the list.
 
         map.current.flyTo({
             center: [selectedClient.longitude, selectedClient.latitude],
@@ -385,10 +594,33 @@ export default function MapView({ clients, selectedClient, onClientSelect }: Map
         });
     }, [selectedClient]);
 
+    // Enhance Marker Click to add to route if Shift is held
+    // NOTE: This logic needs to be inside the marker creation loop or a global listener.
+    // Since we destroy/recreate markers, we can pass a callback to the click handler logic.
+
     return (
         <div className="relative w-full h-full bg-slate-200">
             <div ref={mapContainer} className="!absolute inset-0" />
 
+            <TerritoryControls
+                isDrawing={isDrawing}
+                hasShape={hasShape} // Mapbox draw handles internal shape state, but we track if one exists
+                onStartDraw={startDrawing}
+                onClear={clearDrawing}
+                onSave={saveTerritory}
+                onCancel={() => {
+                    draw.current?.changeMode('simple_select');
+                    setIsDrawing(false);
+                }}
+            />
+
+            <RoutePanel
+                selectedStops={routeStops}
+                onOptimize={handleOptimize}
+                onClear={handleClearRoute}
+                onRemoveStop={handleRemoveStop}
+                isOptimized={isOptimized}
+            />
             {/* Loading Indicator for Geocoding */}
             {clients.length > allLocations.length && (
                 <div className="absolute bottom-6 right-6 z-50 bg-white/90 backdrop-blur px-3 py-1 rounded text-xs shadow-md">
