@@ -25,6 +25,11 @@ export default function MetricsGrid({ client }: MetricsGridProps) {
             icon: DollarSign,
         },
         {
+            label: 'Net Revenue',
+            value: formatCurrency(client.totalNetRevenue || 0),
+            icon: DollarSign, // Maybe use a different color or icon variant if available, but DollarSign is fine
+        },
+        {
             label: 'Days in Program',
             value: client.daysInProgram || 0,
             icon: Calendar,

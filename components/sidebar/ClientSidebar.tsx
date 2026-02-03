@@ -8,6 +8,7 @@ import { VendingpreneurClient } from '@/lib/types';
 import { MEMBERSHIP_COLORS } from '@/lib/constants';
 import { getAirtableRecordUrl } from '@/lib/airtable';
 import ContactCard from './ContactCard';
+import ProgramDetails from './ProgramDetails';
 import MetricsGrid from './MetricsGrid';
 import RevenueChart from './RevenueChart';
 import LocationGallery from './LocationGallery';
@@ -91,6 +92,7 @@ export default function ClientSidebar({ client, isOpen, onClose }: ClientSidebar
                             <MetricsGrid client={client} />
                             <Separator />
                             <ContactCard client={client} />
+                            <ProgramDetails client={client} />
 
                             <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
                                 <h4 className="text-sm font-semibold text-blue-900 mb-2">Internal Notes</h4>
