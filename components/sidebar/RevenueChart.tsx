@@ -2,7 +2,8 @@
 
 import { useMemo } from 'react';
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Cell, CartesianGrid } from 'recharts';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { GlassCard } from '@/components/ui/glass-card';
+import { CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface RevenueChartProps {
     currentMonthlyRevenue: number;
@@ -32,44 +33,47 @@ export default function RevenueChart({ currentMonthlyRevenue }: RevenueChartProp
     }, [currentMonthlyRevenue]);
 
     return (
-        <Card className="shadow-none border-none bg-slate-50/50">
-            <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-slate-500">6-Month Trend</CardTitle>
+        <GlassCard className="shadow-xl bg-slate-900/50 border-white/5">
+            <CardHeader className="pb-2 text-white/90">
+                <CardTitle className="text-sm font-medium text-slate-400">6-Month Trend</CardTitle>
             </CardHeader>
             <CardContent>
                 <div className="h-[200px] w-full">
                     <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={data}>
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#ffffff10" />
                             <XAxis
                                 dataKey="name"
                                 fontSize={12}
                                 tickLine={false}
                                 axisLine={false}
-                                stroke="#888888"
+                                stroke="#94a3b8"
                             />
                             <YAxis
                                 fontSize={12}
                                 tickLine={false}
                                 axisLine={false}
-                                stroke="#888888"
+                                stroke="#94a3b8"
                                 tickFormatter={(value) => `$${value / 1000}k`}
                             />
                             <Tooltip
-                                cursor={{ fill: 'transparent' }}
+                                cursor={{ fill: '#ffffff05' }}
                                 contentStyle={{
-                                    backgroundColor: 'white',
+                                    backgroundColor: '#0f172a',
                                     borderRadius: '8px',
-                                    border: '1px solid #e2e8f0',
-                                    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                                    border: '1px solid #1e293b',
+                                    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.5)',
+                                    color: 'white'
                                 }}
+                                itemStyle={{ color: '#e2e8f0' }}
+                                labelStyle={{ color: '#94a3b8' }}
                                 formatter={(value: number | undefined) => [`$${(value || 0).toLocaleString()}`, 'Revenue']}
                             />
                             <Bar dataKey="revenue" radius={[4, 4, 0, 0]}>
                                 {data.map((entry, index) => (
                                     <Cell
                                         key={`cell-${index}`}
-                                        fill={index === data.length - 1 ? '#22c55e' : '#cbd5e1'}
+                                        fill={index === data.length - 1 ? '#22c55e' : '#475569'}
                                     />
                                 ))}
                             </Bar>
@@ -77,6 +81,6 @@ export default function RevenueChart({ currentMonthlyRevenue }: RevenueChartProp
                     </ResponsiveContainer>
                 </div>
             </CardContent>
-        </Card>
+        </GlassCard>
     );
 }

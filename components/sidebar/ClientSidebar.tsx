@@ -33,16 +33,16 @@ export default function ClientSidebar({ client, isOpen, onClose, onLeadsFound }:
     const router = useRouter();
 
     const SidebarContent = () => (
-        <div className="flex flex-col h-full bg-slate-50/30">
+        <div className="flex flex-col h-full bg-slate-900/40">
             {/* Tabs Navigation */}
-            <div className="flex items-center gap-1 px-6 pt-2 pb-0 bg-white border-b sticky top-0 z-10">
+            <div className="flex items-center gap-1 px-6 pt-2 pb-0 bg-transparent border-b border-white/10 sticky top-0 z-10">
                 <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => setActiveTab('overview')}
                     className={cn(
-                        "rounded-b-none border-b-2 border-transparent px-4 py-2 h-auto text-sm font-medium text-slate-500 hover:text-slate-900",
-                        activeTab === 'overview' && "border-blue-600 text-blue-600 bg-blue-50/50"
+                        "rounded-b-none border-b-2 border-transparent px-4 py-2 h-auto text-sm font-medium text-slate-400 hover:text-white hover:bg-white/5",
+                        activeTab === 'overview' && "border-blue-500 text-blue-400 bg-blue-500/10"
                     )}
                 >
                     <LayoutDashboard className="h-4 w-4 mr-2" />
@@ -210,7 +210,7 @@ export default function ClientSidebar({ client, isOpen, onClose, onLeadsFound }:
     // Header Content (shared)
     const HeaderContent = () => (
         <div className="flex-1 pr-6">
-            <h2 className="text-2xl font-bold text-slate-900 tracking-tight">{client.fullName}</h2>
+            <h2 className="text-2xl font-bold text-white tracking-tight">{client.fullName}</h2>
             <div className="flex flex-wrap items-center gap-2 mt-3">
                 <Badge
                     style={{ backgroundColor: membershipColor }}
@@ -218,11 +218,11 @@ export default function ClientSidebar({ client, isOpen, onClose, onLeadsFound }:
                 >
                     {client.membershipLevel || 'N/A'}
                 </Badge>
-                <Badge variant="outline" className="px-2.5 py-0.5 text-xs font-medium bg-white text-slate-600 border-slate-200">
+                <Badge variant="outline" className="px-2.5 py-0.5 text-xs font-medium bg-white/10 text-slate-300 border-white/10">
                     {client.status}
                 </Badge>
                 {client.vendHubClientId && (
-                    <Badge variant="secondary" className="px-2.5 py-0.5 text-xs font-medium bg-indigo-50 text-indigo-700 hover:bg-indigo-100">
+                    <Badge variant="secondary" className="px-2.5 py-0.5 text-xs font-medium bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 border border-indigo-500/20">
                         VendHub Sync
                     </Badge>
                 )}
@@ -255,13 +255,13 @@ export default function ClientSidebar({ client, isOpen, onClose, onLeadsFound }:
                     exit={{ x: '100%', opacity: 0.5 }}
                     transition={{ type: 'spring', damping: 25, stiffness: 200 }}
                     // WIDER SIDEBAR: w-[600px]
-                    className="fixed right-0 top-0 h-screen w-[600px] bg-white shadow-2xl z-40 flex flex-col border-l"
+                    className="fixed right-0 top-0 h-screen w-[600px] bg-slate-950/80 backdrop-blur-xl border-l border-white/10 shadow-2xl z-40 flex flex-col"
                 >
                     {/* Header */}
-                    <div className="sticky top-0 bg-white border-b p-6 flex items-start justify-between z-20 shadow-sm">
+                    <div className="sticky top-0 bg-slate-950/50 backdrop-blur-md border-b border-white/10 p-6 flex items-start justify-between z-20 shadow-sm">
                         <HeaderContent />
-                        <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full hover:bg-slate-100">
-                            <X className="h-6 w-6 text-slate-500" />
+                        <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full hover:bg-white/10 text-slate-400 hover:text-white">
+                            <X className="h-6 w-6" />
                         </Button>
                     </div>
 

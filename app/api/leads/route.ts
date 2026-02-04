@@ -1,16 +1,20 @@
 import { NextResponse } from 'next/server';
 import { Lead } from '@/lib/types';
 
-const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY;
+const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_API_KEY || process.env.GOOGLE_PLACES_API_KEY;
 
 // Mock data generator for when API key is missing
-const generateMockLeads = (lat: number, lng: number, radius: number, type: string): Lead[] => {
+const generateMockLeads = (lat: number, lng: number, radius: number, type: string, minRating: number = 0, minReviews: number = 0): Lead[] => {
     const leads: Lead[] = [];
     const count = 5 + Math.floor(Math.random() * 5); // 5-10 leads
 
     for (let i = 0; i < count; i++) {
-        // Random offset within roughly radius (1 deg lat ~= 111km, 1m ~= 1600m)
-        // 1 meter is approx 0.000009 degrees
+        const rating = 3.5 + Math.random() * 1.5; // 3.5 - 5.0
+        const reviews = Math.floor(Math.random() * 200); // 0 - 200
+
+        // Mock Filter
+        if (rating < minRating || reviews < minReviews) continue;
+
         const r = radius * 1600; // radius in meters
         const offsetLat = (Math.random() - 0.5) * (r / 111000) * 2;
         const offsetLng = (Math.random() - 0.5) * (r / (111000 * Math.cos(lat * Math.PI / 180))) * 2;
@@ -26,8 +30,8 @@ const generateMockLeads = (lat: number, lng: number, radius: number, type: strin
             latitude: lat + offsetLat,
             longitude: lng + offsetLng,
             type: selectedType,
-            rating: 3.5 + Math.random() * 1.5,
-            user_ratings_total: Math.floor(Math.random() * 100),
+            rating: parseFloat(rating.toFixed(1)),
+            user_ratings_total: reviews,
             vicinity: 'Mock Vicinity'
         });
     }
@@ -47,10 +51,20 @@ export async function GET(request: Request) {
 
     // If no API Key, return Mock Data
     if (!GOOGLE_PLACES_API_KEY) {
-        console.warn('No Google Places API Key found. Returning mock data.');
-        const mockLeads = generateMockLeads(lat, lng, radius, type);
+        console.warn('⚠️ No Google Places API Key found. Returning mock data.');
+        console.log('Environment Check:', {
+            GOOGLE_API_KEY: process.env.GOOGLE_API_KEY ? 'Set' : 'Missing',
+            GOOGLE_PLACES_API_KEY: process.env.GOOGLE_PLACES_API_KEY ? 'Set' : 'Missing',
+        });
+
+        const minRating = parseFloat(searchParams.get('minRating') || '0');
+        const minReviews = parseInt(searchParams.get('minReviews') || '0');
+        const mockLeads = generateMockLeads(lat, lng, radius, type, minRating, minReviews);
+
         return NextResponse.json({ leads: mockLeads, note: 'Mock Data (No API Key)' });
     }
+
+    console.log('✅ Using Google Places API Key:', GOOGLE_PLACES_API_KEY.substring(0, 5) + '...');
 
     try {
         // Radius in meters
@@ -72,7 +86,22 @@ export async function GET(request: Request) {
             throw new Error(data.error_message || 'Google Places API Error');
         }
 
-        const leads: Lead[] = (data.results || []).map((place: {
+        const minRating = parseFloat(searchParams.get('minRating') || '0');
+        const minReviews = parseInt(searchParams.get('minReviews') || '0');
+
+        let rawResults = data.results || [];
+
+        // Phase 14: "Trash Filter"
+        // Strict filtering to remove low-quality leads
+        if (minRating > 0 || minReviews > 0) {
+            rawResults = rawResults.filter((place: { rating?: number; user_ratings_total?: number }) => {
+                const rating = place.rating || 0;
+                const reviews = place.user_ratings_total || 0;
+                return rating >= minRating && reviews >= minReviews;
+            });
+        }
+
+        const leads: Lead[] = rawResults.map((place: {
             place_id: string;
             name: string;
             formatted_address: string;

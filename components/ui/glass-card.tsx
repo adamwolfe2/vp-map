@@ -19,8 +19,9 @@ export function GlassCard({ children, className, intensity = 'medium', animated 
     };
 
     const bgStyles = theme === 'dark'
-        ? 'bg-black/40 border-white/10 hover:border-white/20'
-        : 'bg-white/60 border-black/5 hover:border-black/10';
+        // Deeper, richer dark background with a subtle gradient and stronger border
+        ? 'bg-slate-950/70 border-white/5 hover:border-white/10 shadow-xl shadow-black/20 ring-1 ring-white/5'
+        : 'bg-white/70 border-white/20 hover:border-white/40 shadow-xl shadow-slate-200/50';
 
     const animationStyles = animated
         ? 'animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out'

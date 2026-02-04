@@ -148,6 +148,9 @@ export const AIRTABLE_FIELD_MAPPING = {
   skoolJoinDate: 'Skool Join Date',
   salesRep: 'Sales Rep',
   notes: 'Notes',
+  profilePicture: 'Profile Picture',
+  gallery: 'Gallery',
+  attachments: 'Attachments',
 } as const;
 
 export const LOCATIONS_FIELD_MAPPING = {

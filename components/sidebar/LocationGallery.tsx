@@ -1,51 +1,22 @@
 'use client';
 
-import { VendingpreneurClient } from '@/lib/types';
-import { MapPin, DollarSign, Box } from 'lucide-react';
+import { useState } from 'react';
+import { VendingpreneurClient, Machine } from '@/lib/types';
+import { MapPin, DollarSign, Box, Layers } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { GlassCard } from '@/components/ui/glass-card';
+import { CardContent } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import InventoryPanel from '@/components/dashboard/InventoryPanel';
 
 interface LocationGalleryProps {
     client: VendingpreneurClient;
 }
 
 export default function LocationGallery({ client }: LocationGalleryProps) {
-    const locations = [];
-
-    // 1. Gather Sub-locations (1-5)
-    for (let i = 1; i <= 5; i++) {
-        // @ts-expect-error - Dynamic access to client property
-        const address = client[`location${i}Address`];
-        // @ts-expect-error - Dynamic access to client property
-        const revenue = client[`location${i}MonthlyRevenue`];
-        // @ts-expect-error - Dynamic access to client property
-        const machines = client[`location${i}NumberOfMachines`];
-        // @ts-expect-error - Dynamic access to client property
-        const type = client[`location${i}MachineType`];
-
-        if (address && address.length > 5) {
-            locations.push({
-                name: `Location ${i}`,
-                address,
-                revenue,
-                machines,
-                type
-            });
-        }
-    }
-
-    // 2. Gather Linked Locations
-    if (client.linkedLocations) {
-        client.linkedLocations.forEach((loc, idx) => {
-            locations.push({
-                name: `Linked Location ${idx + 1}`,
-                address: loc.address || '',
-                revenue: loc.monthlyRevenue,
-                machines: loc.machinesCount,
-                type: loc.machineType
-            });
-        });
-    }
+    const locations = client.locations || [];
+    const [selectedMachine, setSelectedMachine] = useState<Machine | null>(null);
 
     if (locations.length === 0) {
         return (
@@ -63,43 +34,80 @@ export default function LocationGallery({ client }: LocationGalleryProps) {
 
             <div className="grid gap-3">
                 {locations.map((loc, idx) => (
-                    <Card key={idx} className="overflow-hidden hover:shadow-md transition-shadow">
+                    <GlassCard key={idx} className="overflow-hidden hover:shadow-lg transition-all bg-slate-800/50 border-white/5 hover:border-white/20 group">
                         <CardContent className="p-0 flex">
                             {/* Placeholder Image Section (for Phase 6) */}
-                            <div className="w-24 bg-slate-200 flex items-center justify-center shrink-0">
-                                <MapPin className="h-6 w-6 text-slate-400" />
+                            <div className="w-24 bg-slate-900/50 flex items-center justify-center shrink-0 border-r border-white/5">
+                                <MapPin className="h-6 w-6 text-slate-600 group-hover:text-blue-400 transition-colors" />
                             </div>
 
                             <div className="p-3 flex-1 min-w-0">
                                 <div className="flex justify-between items-start mb-1">
-                                    <h4 className="font-medium text-sm truncate pr-2" title={loc.address}>
-                                        {loc.address}
-                                    </h4>
-                                    {loc.type && (
-                                        <Badge variant="secondary" className="text-[10px] h-5">
-                                            {loc.type}
+                                    <div className="flex items-center gap-2 overflow-hidden pr-2">
+                                        {/* Status Dot */}
+                                        {(() => {
+                                            const issue = loc.machines?.find(m => m.status !== 'Online');
+                                            let color = 'bg-emerald-500'; // Default Online
+                                            if (issue?.status === 'Error' || issue?.status === 'Offline') color = 'bg-red-500 animate-pulse';
+                                            else if (issue?.status === 'LowStock') color = 'bg-yellow-500';
+
+                                            return <div className={`h-2 w-2 rounded-full shrink-0 ${color}`} title={issue ? issue.status : 'All Online'} />;
+                                        })()}
+                                        <h4 className="font-medium text-sm truncate text-white group-hover:text-blue-300 transition-colors" title={loc.address}>
+                                            {loc.address || 'Unknown Address'}
+                                        </h4>
+                                    </div>
+                                    {loc.machineType && (
+                                        <Badge variant="secondary" className="text-[10px] h-5 bg-slate-700 text-slate-300">
+                                            {loc.machineType}
                                         </Badge>
                                     )}
                                 </div>
 
                                 <div className="flex items-center gap-4 text-xs text-muted-foreground mt-2">
                                     <div className="flex items-center gap-1">
-                                        <DollarSign className="h-3 w-3" />
-                                        <span className="font-medium text-slate-700">
-                                            ${(loc.revenue || 0).toLocaleString()}
+                                        <DollarSign className="h-3 w-3 text-emerald-500" />
+                                        <span className="font-medium text-slate-300">
+                                            ${(loc.monthlyRevenue || 0).toLocaleString()}
                                         </span>
-                                        <span className="text-[10px]">/mo</span>
+                                        <span className="text-[10px] text-slate-500">/mo</span>
                                     </div>
-                                    <div className="flex items-center gap-1">
+                                    <div className="flex items-center gap-1 text-slate-400">
                                         <Box className="h-3 w-3" />
-                                        <span>{loc.machines || 1} machines</span>
+                                        <span>{loc.machinesCount || 1} machines</span>
                                     </div>
+                                </div>
+
+                                {/* Inventory Action */}
+                                <div className="mt-3">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="w-full h-7 text-xs border-white/10 bg-white/5 text-slate-300 hover:text-white hover:bg-white/10"
+                                        onClick={() => {
+                                            const machine = loc.machines?.[0]; // Select primary machine
+                                            if (machine) setSelectedMachine(machine);
+                                        }}
+                                    >
+                                        <Layers className="h-3 w-3 mr-2" />
+                                        View Inventory
+                                    </Button>
                                 </div>
                             </div>
                         </CardContent>
-                    </Card>
+                    </GlassCard>
                 ))}
             </div>
+
+            {/* Inventory Modal */}
+            <Dialog open={!!selectedMachine} onOpenChange={(open) => !open && setSelectedMachine(null)}>
+                <DialogContent className="max-w-4xl p-0 bg-transparent border-none overflow-hidden h-[80vh]">
+                    <DialogHeader className="sr-only">
+                        <DialogTitle>Machine Inventory</DialogTitle>
+                    </DialogHeader>
+                    {selectedMachine && <InventoryPanel machine={selectedMachine} />}
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

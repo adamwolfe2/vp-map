@@ -26,7 +26,7 @@ export default function TerritoryControls({
 
     if (!isDrawing && !hasShape) {
         return (
-            <div className="absolute top-4 left-1/2 -translate-x-1/2 md:left-auto md:right-4 md:translate-x-0 z-10">
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10">
                 <GlassCard animated={true} className="p-1">
                     <Button
                         variant="ghost"
@@ -42,7 +42,7 @@ export default function TerritoryControls({
     }
 
     return (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 md:left-auto md:right-4 md:translate-x-0 z-10">
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10">
             <GlassCard animated={true} className="p-2 flex items-center gap-2">
                 {isDrawing && !hasShape && (
                     <div className="px-3 text-sm font-medium text-slate-600 dark:text-slate-300 animate-pulse">

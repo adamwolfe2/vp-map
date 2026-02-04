@@ -80,20 +80,55 @@ export interface VendingpreneurClient {
   skoolJoinDate?: string;
   salesRep?: string;
   notes?: string;
-  linkedLocations?: Location[]; // From new Locations table
+  profilePicture?: { url: string; filename: string }[];
+  gallery?: { url: string; filename: string }[];
+
+  // Phase 12: Relational Data Architecture
+  // The 'locations' array consolidates both legacy (flat) and new (linked) locations.
+  locations?: Location[];
+
+  // Legacy Linked Locations (deprecated, use 'locations' instead)
+  linkedLocations?: Location[];
+}
+
+// Phase 16: Inventory Data
+export interface InventoryItem {
+  slot: string; // e.g. "A1"
+  productName: string;
+  price: number;
+  stock: number;
+  capacity: number;
+  imageUrl?: string;
+  lastRestocked?: string;
+}
+
+// Phase 13: Machine Telemetry
+export interface Machine {
+  id: string;
+  serialNumber: string;
+  type: 'Snack' | 'Drink' | 'Combo' | 'Coffee' | 'Retail';
+  status: 'Online' | 'Offline' | 'Error' | 'LowStock';
+  lastHeartbeat: string; // ISO Date
+  productLevel?: number; // 0-100%
+  inventory?: InventoryItem[]; // Phase 16
 }
 
 export interface Location {
-  id: string;
+  id: string; // Unique ID (Airtable Record ID or generated)
+  name?: string; // e.g. "Main Hub" or "Location 1"
+  status?: 'Active' | 'Pending' | 'Closed';
   address?: string;
   city?: string;
   state?: string;
   zip?: string;
+  latitude?: number;
+  longitude?: number;
   machineType?: string;
   propertyType?: string;
   monthlyRevenue?: number;
   machinesCount?: number;
   clientId?: string[]; // Array of linked record IDs
+  machines?: Machine[]; // Telemetry Data
 }
 
 // Normalized location data for UI display
@@ -150,6 +185,10 @@ export interface ExtendedLocation {
   longitude?: number;
   revenue?: number;
   parentClient: VendingpreneurClient;
+
+  // Phase 13
+  hasIssue?: boolean;
+  issueDescription?: string;
 }
 
 // API Response types

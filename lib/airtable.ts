@@ -24,6 +24,51 @@ const getAirtableBase = () => {
   return Airtable.base(baseId);
 };
 
+// Phase 13: Mock IoT Generator
+const generateMockMachines = (count: number, locationId: string): import('./types').Machine[] => {
+  return Array.from({ length: count || 1 }).map((_, idx) => {
+    // 10% chance of issue
+    const rand = Math.random();
+    let status: 'Online' | 'Offline' | 'Error' | 'LowStock' = 'Online';
+    if (rand > 0.95) status = 'Error';
+    else if (rand > 0.90) status = 'Offline';
+    else if (rand > 0.85) status = 'LowStock';
+
+    // Phase 16: Mock Inventory
+    const inventory: import('./types').InventoryItem[] = [];
+    const rows = ['A', 'B', 'C', 'D', 'E'];
+    const cols = 8;
+    const products = ['Cola', 'Diet Cola', 'Lemon Lime', 'Orange', 'Root Beer', 'Water', 'Iced Tea', 'Energy Drink'];
+    const prices = [1.50, 1.50, 1.50, 1.50, 1.50, 1.25, 1.75, 2.50];
+
+    rows.forEach((row, rIdx) => {
+      for (let c = 1; c <= cols; c++) {
+        const pIdx = Math.floor(Math.random() * products.length);
+        const capacity = 10;
+        const stock = Math.floor(Math.random() * (capacity + 1));
+
+        inventory.push({
+          slot: `${row}${c}`,
+          productName: products[pIdx] || 'Mystery Snack',
+          price: prices[pIdx] || 1.00,
+          stock,
+          capacity,
+        });
+      }
+    });
+
+    return {
+      id: `mach-${locationId}-${idx}`,
+      serialNumber: `SN-${Math.random().toString(36).substr(2, 8).toUpperCase()}`,
+      type: 'Combo',
+      status,
+      lastHeartbeat: new Date().toISOString(),
+      productLevel: Math.floor(Math.random() * 100),
+      inventory
+    };
+  });
+};
+
 // Helper for parsing numbers safely
 const parseNumber = (val: any): number | undefined => {
   if (val === null || val === undefined || val === '') return undefined;
@@ -100,6 +145,36 @@ const transformAirtableRecord = (record: any): VendingpreneurClient => {
     skoolJoinDate: fields[AIRTABLE_FIELD_MAPPING.skoolJoinDate],
     salesRep: fields[AIRTABLE_FIELD_MAPPING.salesRep],
     notes: fields[AIRTABLE_FIELD_MAPPING.notes],
+    profilePicture: fields[AIRTABLE_FIELD_MAPPING.profilePicture] as any,
+    gallery: fields[AIRTABLE_FIELD_MAPPING.gallery] as any,
+    // Normalize Data: Combine Flat + Linked locations
+    locations: (() => {
+      const locs: Location[] = [];
+
+      // 1. Parse Flat Fields (Location 1-5)
+      for (let i = 1; i <= 5; i++) {
+        const addr = fields[AIRTABLE_FIELD_MAPPING[`location${i}Address` as keyof typeof AIRTABLE_FIELD_MAPPING]];
+        // Only valid if address exists and is reasonably long (e.g. > 3 chars)
+        if (addr && String(addr).length > 3) {
+          locs.push({
+            id: `flat-loc-${i}-${record.id}`,
+            name: i === 1 ? 'Main Location' : `Location ${i}`,
+            status: 'Active',
+            address: String(addr),
+            machineType: String(fields[AIRTABLE_FIELD_MAPPING[`location${i}MachineType` as keyof typeof AIRTABLE_FIELD_MAPPING]] || ''),
+            monthlyRevenue: Number(fields[AIRTABLE_FIELD_MAPPING[`location${i}MonthlyRevenue` as keyof typeof AIRTABLE_FIELD_MAPPING]] || 0),
+            machinesCount: Number(fields[AIRTABLE_FIELD_MAPPING[`location${i}NumberOfMachines` as keyof typeof AIRTABLE_FIELD_MAPPING]] || 0),
+            propertyType: String(fields[AIRTABLE_FIELD_MAPPING[`location${i}PropertyType` as keyof typeof AIRTABLE_FIELD_MAPPING]] || ''),
+            // Phase 13: Simulated Telemetry
+            machines: generateMockMachines(
+              Number(fields[AIRTABLE_FIELD_MAPPING[`location${i}NumberOfMachines` as keyof typeof AIRTABLE_FIELD_MAPPING]] || 1),
+              `flat-loc-${i}-${record.id}`
+            )
+          });
+        }
+      }
+      return locs;
+    })()
   };
 };
 
@@ -233,7 +308,24 @@ export async function fetchAllClients(): Promise<VendingpreneurClient[]> {
       // We match by Airtable Record ID (client.id), NOT client.clientId (string) 
       // because Linked Records use Record IDs.
       if (linkedLocationsMap.has(client.id)) {
-        client.linkedLocations = linkedLocationsMap.get(client.id);
+        const linked = linkedLocationsMap.get(client.id) || [];
+        client.linkedLocations = linked;
+
+        // Merge into main locations array
+        if (!client.locations) client.locations = [];
+
+        linked.forEach(l => {
+          // Assign a name if missing
+          if (!l.name) l.name = `Linked Location ${l.id.substring(0, 4)}`;
+          if (!l.status) l.status = 'Active';
+
+          // Phase 13: Simulated Telemetry for Linked Locations
+          if (!l.machines) {
+            l.machines = generateMockMachines(l.machinesCount || 1, l.id);
+          }
+
+          client.locations!.push(l);
+        });
       }
     });
 

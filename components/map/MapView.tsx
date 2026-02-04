@@ -91,95 +91,80 @@ export default function MapView({ clients, selectedClient, onClientSelect, leads
         const expanded: ExtendedLocation[] = [];
 
         clients.forEach(client => {
-            // 1. Main Hub
-            if (client.latitude && client.longitude) {
-                expanded.push({
-                    id: `${client.id}-main`,
-                    clientId: client.id,
-                    type: 'Main',
-                    index: 0,
-                    name: 'Main Hub',
-                    address: client.fullAddress || '',
-                    latitude: client.latitude,
-                    longitude: client.longitude,
-                    parentClient: client,
-                });
-            }
-            // Assuming 'el' and 'loc' would be defined in a context where a marker element is being created.
-            // For a Mapbox GL JS map, click handlers are typically added to layers, not directly to data objects.
-            // The following code is placed as per the instruction, but it would require 'el' to be a DOM element
-            // representing a marker and 'loc' to be the ExtendedLocation object being processed.
-            // In a typical Mapbox GL JS setup, you'd use map.on('click', 'layer-id', ...) to handle feature clicks.
-            // This snippet would only work if custom HTML markers were being created here.
-            // As the instruction is to "make the change faithfully", it's inserted as requested.
-            // It's likely this code needs to be moved to where actual marker elements are rendered.
-            // el.addEventListener('click', (e) => {
-            // e.stopPropagation(); // Prevent map click
+            // 1. Maintain Main Hub (Legacy/Fallback) logic 
+            // In the new model, the "Main Hub" should ideally be in client.locations[0] or explicitly typed.
+            // But for backward compatibility with the rest of the app that expects client.latitude/longitude to be the "Hub",
+            // we will keep pushing this specific entry if we want the "Pulsing Hub" effect.
+            // However, strictly speaking, client.locations includes *everything*.
+            // Let's iterate client.locations and enhance them.
 
-            // // If Shift Key is held, add to route
-            // if (e.shiftKey || e.metaKey) {
-            //     handleAddToRoute(loc); // handleAddToRoute is not defined in this scope
-            //     return;
-            // }
+            if (client.locations) {
+                client.locations.forEach((loc, idx) => {
+                    const isMain = idx === 0; // Assume first is main for now, or check loc.name === 'Main Location'
 
-            // onClientSelect(loc.parentClient);
-            // });
+                    // Resolve Coordinates
+                    let lat = loc.latitude;
+                    let lng = loc.longitude;
 
-
-            // 2. Sub-locations (1-5)
-            // We check for address. If we have it, we try to get coords from cache or our local state.
-            for (let i = 1; i <= 5; i++) {
-                // @ts-expect-error - Dynamic access to client location properties
-                const address = client[`location${i}Address`];
-                // @ts-expect-error - Dynamic access to client location properties
-                const type = client[`location${i}MachineType`];
-
-                if (address && typeof address === 'string' && address.length > 5) {
-                    const fullAddr = address.includes('Chicago') ? address : `${address}, ${client.state || ''}`; // Simple heuristic
-                    const cached = geocodeCache.get(fullAddr) || geocodedLocations.get(fullAddr);
-
-                    if (cached) {
-                        expanded.push({
-                            id: `${client.id}-loc-${i}`,
-                            clientId: client.id,
-                            type: 'SubLocation',
-                            index: i,
-                            name: `Location ${i}`,
-                            address: fullAddr,
-                            machineType: type,
-                            latitude: cached.lat,
-                            longitude: cached.lng,
-                            parentClient: client,
-                        });
+                    // If missing on location object, try client root fallback if it's the main location
+                    if ((!lat || !lng) && isMain) {
+                        lat = client.latitude;
+                        lng = client.longitude;
                     }
-                }
-            }
 
-            // 3. Linked Locations (Relational)
-            if (client.linkedLocations && client.linkedLocations.length > 0) {
-                client.linkedLocations.forEach((loc, idx) => {
-                    const addressParts = [loc.address, loc.city, loc.state].filter(Boolean);
-                    if (addressParts.length === 0) return;
+                    // If still missing, check cache
+                    if (!lat || !lng) {
+                        const fullAddr = loc.address;
+                        const addressParts = [loc.address, loc.city, loc.state].filter(Boolean).join(', ');
+                        const lookup = fullAddr || addressParts;
 
-                    const fullAddr = addressParts.join(', ');
-                    const cached = geocodeCache.get(fullAddr) || geocodedLocations.get(fullAddr);
+                        if (lookup) {
+                            const cached = geocodeCache.get(lookup) || geocodedLocations.get(lookup);
+                            if (cached) {
+                                lat = cached.lat;
+                                lng = cached.lng;
+                            }
+                        }
+                    }
 
-                    if (cached) {
+                    if (lat && lng) {
+                        // Check for issues (Offline or Error)
+                        const offlineMachine = loc.machines?.find(m => m.status === 'Offline' || m.status === 'Error');
+                        const hasIssue = !!offlineMachine;
+                        const issueDesc = offlineMachine ? `${offlineMachine.status}: ${offlineMachine.type} (${offlineMachine.serialNumber})` : undefined;
+
                         expanded.push({
-                            id: `${client.id}-linked-${loc.id}`,
+                            id: loc.id,
                             clientId: client.id,
-                            type: 'SubLocation',
-                            index: 10 + idx, // Offset to avoid collision with 1-5
-                            name: `Location ${idx + 1}`,
-                            address: fullAddr,
+                            type: isMain ? 'Main' : 'SubLocation',
+                            index: idx,
+                            name: loc.name || `Location ${idx + 1}`,
+                            address: loc.address || '',
                             machineType: loc.machineType,
-                            latitude: cached.lat,
-                            longitude: cached.lng,
+                            latitude: lat,
+                            longitude: lng,
                             parentClient: client,
-                            revenue: loc.monthlyRevenue
+                            revenue: loc.monthlyRevenue,
+                            hasIssue,
+                            issueDescription: issueDesc
                         });
                     }
                 });
+            } else {
+                // FALLBACK: If client.locations is somehow empty (older implementation catch), do the old Main Hub push
+                if (client.latitude && client.longitude) {
+                    expanded.push({
+                        id: `${client.id}-main`,
+                        clientId: client.id,
+                        type: 'Main',
+                        index: 0,
+                        name: 'Main Hub',
+                        address: client.fullAddress || '',
+                        latitude: client.latitude,
+                        longitude: client.longitude,
+                        parentClient: client,
+                    });
+                }
             }
         });
 
@@ -193,26 +178,18 @@ export default function MapView({ clients, selectedClient, onClientSelect, leads
         const toGeocode = new Set<string>();
 
         clients.forEach(client => {
-            for (let i = 1; i <= 5; i++) {
-                // @ts-expect-error - Dynamic access to client location properties
-                const address = client[`location${i}Address`];
-                if (address && typeof address === 'string' && address.length > 5) {
-                    const fullAddr = address.includes('Chicago') ? address : `${address}, ${client.state || ''}`;
-                    if (!geocodeCache.has(fullAddr) && !geocodedLocations.has(fullAddr)) {
-                        toGeocode.add(fullAddr);
+            if (client.locations) {
+                client.locations.forEach(loc => {
+                    let lookupAddress = loc.address;
+                    // Heuristics to improve geocoding quality
+                    if (lookupAddress && !lookupAddress.includes(',')) {
+                        // If just "123 Main St", append City/State
+                        const parts = [lookupAddress, loc.city || client.city, loc.state || client.state].filter(Boolean);
+                        lookupAddress = parts.join(', ');
                     }
-                }
-            }
 
-            // Linked Locations
-            if (client.linkedLocations) {
-                client.linkedLocations.forEach(loc => {
-                    const addressParts = [loc.address, loc.city, loc.state].filter(Boolean);
-                    if (addressParts.length > 0) {
-                        const fullAddr = addressParts.join(', ');
-                        if (!geocodeCache.has(fullAddr) && !geocodedLocations.has(fullAddr)) {
-                            toGeocode.add(fullAddr);
-                        }
+                    if (lookupAddress && !geocodeCache.has(lookupAddress) && !geocodedLocations.has(lookupAddress)) {
+                        toGeocode.add(lookupAddress);
                     }
                 });
             }
@@ -275,7 +252,8 @@ export default function MapView({ clients, selectedClient, onClientSelect, leads
                     membershipLevel: loc.parentClient.membershipLevel || 'Expired',
                     type: loc.type,
                     name: loc.name,
-                    machineType: loc.machineType
+                    machineType: loc.machineType,
+                    hasIssue: loc.hasIssue // Pass to Mapbox
                 },
                 geometry: {
                     type: 'Point' as const,
@@ -296,11 +274,11 @@ export default function MapView({ clients, selectedClient, onClientSelect, leads
 
         map.current = new mapboxgl.Map({
             container: mapContainer.current,
-            style: theme === 'dark' ? MAPBOX_CONFIG.styleNight : MAPBOX_CONFIG.styleDay,
+            style: MAPBOX_CONFIG.styleNight, // Enforce Night Mode
             center: [MAPBOX_CONFIG.initialViewport.longitude, MAPBOX_CONFIG.initialViewport.latitude],
             zoom: 1.5, // Start grand (Globe View)
-            maxBounds: undefined, // MAPBOX_CONFIG.maxBounds as unknown as mapboxgl.LngLatBoundsLike,
-            projection: 'globe' // 3D Globe Projection
+            maxBounds: undefined,
+            projection: 'globe'
         });
 
         map.current.on('style.load', () => {
@@ -558,6 +536,7 @@ export default function MapView({ clients, selectedClient, onClientSelect, leads
                 paint: {
                     'circle-color': [
                         'case',
+                        ['get', 'hasIssue'], '#ef4444', // RED for issues
                         ['==', ['get', 'type'], 'SubLocation'], '#818cf8',
                         ['match', ['get', 'membershipLevel'], 'Gold', MEMBERSHIP_COLORS.Gold, 'Silver', MEMBERSHIP_COLORS.Silver, 'Bronze', MEMBERSHIP_COLORS.Bronze, 'Platinum', MEMBERSHIP_COLORS.Platinum, MEMBERSHIP_COLORS.Expired]
                     ],
@@ -582,12 +561,62 @@ export default function MapView({ clients, selectedClient, onClientSelect, leads
                 });
             }
 
-            // Leads Layer
+            // Leads Heatmap
+            if (!map.current.getLayer('leads-heat')) {
+                map.current.addLayer({
+                    id: 'leads-heat',
+                    type: 'heatmap',
+                    source: 'leads',
+                    maxzoom: 15,
+                    paint: {
+                        // Increase the heatmap weight based on frequency and property magnitude
+                        'heatmap-weight': [
+                            'interpolate', ['linear'], ['get', 'rating'],
+                            0, 0,
+                            5, 1
+                        ],
+                        // Increase the heatmap color weight weight by zoom level
+                        // heatmap-intensity is a multiplier on top of heatmap-weight
+                        'heatmap-intensity': [
+                            'interpolate', ['linear'], ['zoom'],
+                            0, 1,
+                            9, 3
+                        ],
+                        // Color ramp for heatmap.  Domain is 0 (low) to 1 (high).
+                        // Begin color ramp at 0-stop with a 0-transparancy color
+                        // to create a blur-like effect.
+                        'heatmap-color': [
+                            'interpolate', ['linear'], ['heatmap-density'],
+                            0, 'rgba(33,102,172,0)',
+                            0.2, 'rgb(103,169,207)',
+                            0.4, 'rgb(209,229,240)',
+                            0.6, 'rgb(253,219,199)',
+                            0.8, 'rgb(239,138,98)',
+                            1, 'rgb(178,24,43)'
+                        ],
+                        // Adjust the heatmap radius by zoom level
+                        'heatmap-radius': [
+                            'interpolate', ['linear'], ['zoom'],
+                            0, 2,
+                            9, 20
+                        ],
+                        // Transition from heatmap to circle layer by zoom level
+                        'heatmap-opacity': [
+                            'interpolate', ['linear'], ['zoom'],
+                            14, 1,
+                            15, 0
+                        ]
+                    }
+                }, 'waterway-label'); // Place before labels
+            }
+
+            // Leads Layer (Points)
             if (!map.current.getLayer('leads-point')) {
                 map.current.addLayer({
                     id: 'leads-point',
                     type: 'circle',
                     source: 'leads',
+                    minzoom: 14, // Only show points when close
                     paint: {
                         'circle-color': '#f59e0b',
                         'circle-radius': 6,
@@ -765,38 +794,89 @@ export default function MapView({ clients, selectedClient, onClientSelect, leads
         if (routeStops.find(l => l.id === location.id)) return; // No duplicates
         setRouteStops(prev => [...prev, location]);
         setIsOptimized(false);
+        setRouteStats(undefined);
     };
 
     const handleRemoveStop = (id: string) => {
         setRouteStops(prev => prev.filter(s => s.id !== id));
         setIsOptimized(false);
+        setRouteStats(undefined);
     };
 
-    const handleOptimize = useCallback(() => {
+    const [routeStats, setRouteStats] = useState<{ distance: string; duration: string } | undefined>(undefined);
+
+    const handleOptimize = useCallback(async () => {
         if (routeStops.length < 2) return;
+
+        // 1. Optimize Order (TSP Lite)
         const optimized = optimizeRoute(routeStops[0]!, routeStops);
         setRouteStops(optimized);
         setIsOptimized(true);
 
-        // Update map layer
-        const coordinates = optimized.map(l => [l.longitude, l.latitude]);
-        const geojson: GeoJSON.Feature<GeoJSON.LineString> = {
-            type: 'Feature',
-            properties: {},
-            geometry: {
-                type: 'LineString',
-                coordinates: coordinates as number[][]
-            }
-        };
+        // 2. Fetch Real Driving Route from Mapbox Directions API
+        try {
+            // Mapbox Directions API supports up to 25 coordinates per request. 
+            // For MVP we assume < 25 stops.
+            const coordinates = optimized.map(l => `${l.longitude},${l.latitude}`).join(';');
+            const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${coordinates}?geometries=geojson&overview=full&access_token=${MAPBOX_CONFIG.token}`;
 
-        if (map.current?.getSource('route')) {
-            (map.current.getSource('route') as mapboxgl.GeoJSONSource).setData(geojson);
+            const res = await fetch(url);
+            const data = await res.json();
+
+            if (data.routes && data.routes.length > 0) {
+                const route = data.routes[0];
+                const geojson = {
+                    type: 'Feature' as const,
+                    properties: {},
+                    geometry: route.geometry
+                };
+
+                // Update Map Layer
+                if (map.current?.getSource('route')) {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    (map.current.getSource('route') as any).setData(geojson);
+                }
+
+                // Update Stats
+                const distanceMiles = (route.distance / 1609.34).toFixed(1);
+                const durationMins = Math.round(route.duration / 60);
+
+                // Format duration nicely
+                let durationStr = `${durationMins} min`;
+                if (durationMins > 60) {
+                    const hours = Math.floor(durationMins / 60);
+                    const mins = durationMins % 60;
+                    durationStr = `${hours}h ${mins}m`;
+                }
+
+                setRouteStats({
+                    distance: `${distanceMiles} mi`,
+                    duration: durationStr
+                });
+            }
+        } catch (error) {
+            console.error('Failed to fetch optimized route:', error);
+            // Fallback to straight lines if API fails
+            const coordinates = optimized.map(l => [l.longitude, l.latitude]);
+            const geojson = {
+                type: 'Feature' as const,
+                properties: {},
+                geometry: {
+                    type: 'LineString' as const,
+                    coordinates: coordinates as number[][]
+                }
+            };
+            if (map.current?.getSource('route')) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                (map.current.getSource('route') as any).setData(geojson);
+            }
         }
     }, [routeStops]);
 
     const handleClearRoute = () => {
         setRouteStops([]);
         setIsOptimized(false);
+        setRouteStats(undefined);
         if (map.current?.getSource('route')) {
             (map.current.getSource('route') as mapboxgl.GeoJSONSource).setData({
                 type: 'Feature',
@@ -882,9 +962,10 @@ export default function MapView({ clients, selectedClient, onClientSelect, leads
             <RoutePanel
                 selectedStops={routeStops}
                 onOptimize={handleOptimize}
-                onClear={handleClearRoute}
                 onRemoveStop={handleRemoveStop}
+                onClear={handleClearRoute}
                 isOptimized={isOptimized}
+                routeStats={routeStats}
             />
             {/* Loading Indicator for Geocoding */}
             {clients.length > allLocations.length && (

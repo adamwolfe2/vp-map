@@ -1,4 +1,4 @@
-import { Card } from '@/components/ui/card';
+import { GlassCard } from '@/components/ui/glass-card';
 import { VendingpreneurClient } from '@/lib/types';
 import { formatCurrency } from '@/lib/utils';
 import { Package, MapPin, DollarSign, Calendar } from 'lucide-react';
@@ -8,26 +8,36 @@ interface MetricsGridProps {
 }
 
 export default function MetricsGrid({ client }: MetricsGridProps) {
+    // Phase 12: Derived Metrics Logic
+    // Validates top-level rollups against detailed location data
+    const locationCount = client.totalNumberOfLocations || client.locations?.length || 0;
+
+    const machineCount = client.totalNumberOfMachines ||
+        (client.locations || []).reduce((sum, loc) => sum + (loc.machinesCount || 0), 0);
+
+    const revenueCount = client.totalMonthlyRevenue ||
+        (client.locations || []).reduce((sum, loc) => sum + (loc.monthlyRevenue || 0), 0);
+
     const metrics = [
         {
             label: 'Total Machines',
-            value: client.totalNumberOfMachines || 0,
+            value: machineCount,
             icon: Package,
         },
         {
             label: 'Total Locations',
-            value: client.totalNumberOfLocations || 0,
+            value: locationCount,
             icon: MapPin,
         },
         {
             label: 'Monthly Revenue',
-            value: formatCurrency(client.totalMonthlyRevenue || 0),
+            value: formatCurrency(revenueCount),
             icon: DollarSign,
         },
         {
             label: 'Net Revenue',
             value: formatCurrency(client.totalNetRevenue || 0),
-            icon: DollarSign, // Maybe use a different color or icon variant if available, but DollarSign is fine
+            icon: DollarSign,
         },
         {
             label: 'Days in Program',
@@ -39,13 +49,13 @@ export default function MetricsGrid({ client }: MetricsGridProps) {
     return (
         <div className="grid grid-cols-2 gap-4">
             {metrics.map((metric) => (
-                <Card key={metric.label} className="p-4">
+                <GlassCard key={metric.label} className="p-4 bg-slate-800/50 border-white/5">
                     <div className="flex items-center gap-2 mb-2">
-                        <metric.icon className="h-4 w-4 text-primary" />
-                        <p className="text-xs text-gray-500">{metric.label}</p>
+                        <metric.icon className="h-4 w-4 text-emerald-400" />
+                        <p className="text-xs text-slate-400">{metric.label}</p>
                     </div>
-                    <p className="text-2xl font-semibold">{metric.value}</p>
-                </Card>
+                    <p className="text-2xl font-semibold text-white">{metric.value}</p>
+                </GlassCard>
             ))}
         </div>
     );
