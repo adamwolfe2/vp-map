@@ -1,24 +1,33 @@
 # Vendingpreneur Map
 
-An interactive CRM and mapping tool for Vendingpreneurs to manage locations, territories, and business metrics. Built for Modern Amenities Group.
+An interactive CRM and mapping tool for Vendingpreneurs to manage locations, territories, and business metrics. Built for Modern Amenities Group with a focus on premium aesthetics and mobile-first usability.
 
-## Features
+## Key Features
 
-- **Interactive Map**: Visualize clients and locations with clustered rendering.
-- **Smart Routing**: Optimize routes between multiple stops using client-side TSP algorithms.
-- **Territory Planning**: Draw and manage franchise territories directly on the map.
-- **Admin Dashboard**: secure area for managing client data, viewing analytics, and editing records.
-- **Mobile First**: Fully responsive design with PWA support (Add to Home Screen) and bottom-sheet navigation.
-- **Offline Capable**: Basic offline support via Service Worker caching.
+### 🗺️ Advanced Mapping
+- **Clustered Rendering**: Efficiently handles thousands of client locations.
+- **Smart Routing**: Client-side optimization for route planning between multiple stops.
+- **Territory Controls**: Draw, edit, and save franchise territories with area calculation.
+- **Locate Me**: One-touch geolocation for field agents.
+
+### 📱 Modern Glassmorphism UI
+- **Glass Cards**: Premium, translucent UI elements with subtle animations.
+- **Mobile Optimized**: Bottom-sheet navigation and touch-friendly controls.
+- **Dark/Light Mode**: Full theme support (currently optimized for Light mode).
+
+### 💼 CRM & Management
+- **Admin Dashboard**: `/admin` portal for managing client data and viewing platform analytics.
+- **Lead Generator**: Simulate finding new leads (Gyms, Offices) around a client's location.
+- **Real-time Updates**: (Simulated) Immediate feedback for "Add to CRM" actions.
 
 ## Tech Stack
 
 - **Framework**: [Next.js 14](https://nextjs.org/) (App Router)
 - **Map Engine**: [Mapbox GL JS](https://www.mapbox.com/mapbox-gl-js)
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/) & [Shadcn UI](https://ui.shadcn.com/)
-- **State Management**: React Context & Hooks
-- **Data Fetching**: SWR / Native Fetch (Simulated with Mock Data)
-- **Tables**: TanStack Table
+- **Charts**: [Recharts](https://recharts.org/) for analytics visualization.
+- **Icons**: [Lucide React](https://lucide.dev/)
+- **State**: React Context & Hooks (with local storage persistence for settings).
 
 ## Getting Started
 
@@ -36,7 +45,7 @@ An interactive CRM and mapping tool for Vendingpreneurs to manage locations, ter
 3. **Set up Environment Variables**
    Create a `.env.local` file in the root directory:
    ```env
-   NEXT_PUBLIC_MAPBOX_TOKEN=pk.eyJ1IjoiYWRhbXdvbGZlIi... (Your Token)
+   NEXT_PUBLIC_MAPBOX_TOKEN=pk.eyJ1IjoiYWRhbXdvbGZlIi... (Required for Map)
    ```
 
 4. **Run the development server**
@@ -45,17 +54,27 @@ An interactive CRM and mapping tool for Vendingpreneurs to manage locations, ter
    ```
 
 5. **Open the app**
-   Navigate to [http://localhost:3000](http://localhost:3000)
+   - **Main App**: [http://localhost:3000](http://localhost:3000)
+   - **Admin Panel**: [http://localhost:3000/admin](http://localhost:3000/admin) (Auth is mocked, auto-login)
+   - **User Portal**: [http://localhost:3000/portal](http://localhost:3000/portal)
 
 ## Project Structure
 
-- `/app`: Next.js App Router pages and layouts.
-- `/components`: Reusable UI components (Map, Sidebar, inputs).
-- `/lib`: Utility functions, constants, and mock data.
-- `/public`: Static assets (icons, manifest).
-- `/hooks`: Custom React hooks (useMediaQuery, etc.).
+- `/app`: Next.js App Router pages (admin, portal, main).
+- `/components`:
+  - `/map`: Mapbox logic, markers, and controls.
+  - `/ui`: Accessible Shadcn & GlassCard components.
+  - `/admin`: Dashboard widgets and data tables.
+  - `/leads`: Lead generation simulation.
+- `/lib`: Helper functions (`airtable.ts` for data) and mock data (`mock_data.ts`).
+- `/hooks`: Custom hooks (useAuth, useLocalStorage).
 
 ## Deployment
 
 The project is optimized for deployment on [Vercel](https://vercel.com).
-Simply connect your GitHub repository and import the project. Ensure the `NEXT_PUBLIC_MAPBOX_TOKEN` is added to the Vercel Environment Variables.
+1. Connect your GitHub repository.
+2. Add `NEXT_PUBLIC_MAPBOX_TOKEN` to Environment Variables.
+3. Deploy.
+
+---
+*Built for Modern Amenities Group - Phase 10 Complete*

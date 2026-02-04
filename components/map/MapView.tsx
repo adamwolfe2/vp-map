@@ -4,25 +4,52 @@ import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
-import { VendingpreneurClient, ExtendedLocation } from '@/lib/types';
+import { VendingpreneurClient, ExtendedLocation, Lead } from '@/lib/types';
 import { MAPBOX_CONFIG, MEMBERSHIP_COLORS, US_CANADA_BOUNDS } from '@/lib/constants';
 import TerritoryControls from './TerritoryControls';
 import RoutePanel from './RoutePanel';
 import { optimizeRoute } from '@/lib/routing';
+import { useTheme } from '@/contexts/ThemeContext';
 import MapboxDraw from '@mapbox/mapbox-gl-draw';
 
 interface MapViewProps {
     clients: VendingpreneurClient[];
     selectedClient: VendingpreneurClient | null;
     onClientSelect: (client: VendingpreneurClient) => void;
+    leads?: Lead[];
 }
 
 // Memory cache for geocoding to prevent excessive API calls
 const geocodeCache = new Map<string, { lat: number; lng: number }>();
 
-export default function MapView({ clients, selectedClient, onClientSelect }: MapViewProps) {
+export default function MapView({ clients, selectedClient, onClientSelect, leads = [] }: MapViewProps) {
     const mapContainer = useRef<HTMLDivElement>(null);
     const map = useRef<mapboxgl.Map | null>(null);
+
+    // ... (keep existing state)
+
+    // Convert leads to GeoJSON
+    const leadsGeoJson = useMemo(() => {
+        return {
+            type: 'FeatureCollection' as const,
+            features: leads.map((lead) => ({
+                type: 'Feature' as const,
+                properties: {
+                    id: lead.id,
+                    name: lead.name,
+                    address: lead.address,
+                    type: 'Lead',
+                    businessType: lead.type
+                },
+                geometry: {
+                    type: 'Point' as const,
+                    coordinates: [lead.longitude, lead.latitude]
+                }
+            }))
+        };
+    }, [leads]);
+
+
     const draw = useRef<MapboxDraw | null>(null);
     const [isMapLoaded, setIsMapLoaded] = useState(false);
 
@@ -48,6 +75,16 @@ export default function MapView({ clients, selectedClient, onClientSelect }: Map
     useEffect(() => {
         latestRef.current = { handleAddToRoute, onClientSelect, allLocations };
     });
+
+    // Update Leads Source
+    useEffect(() => {
+        if (!map.current || !isMapLoaded) return;
+
+        const source = map.current.getSource('leads') as mapboxgl.GeoJSONSource;
+        if (source) {
+            source.setData(leadsGeoJson);
+        }
+    }, [leadsGeoJson, isMapLoaded]);
 
     // Expand clients into multiple locations (Main + Sub-locations)
     const allLocations = useMemo((): ExtendedLocation[] => {
@@ -248,6 +285,9 @@ export default function MapView({ clients, selectedClient, onClientSelect }: Map
         };
     }, [allLocations]);
 
+    const { theme } = useTheme(); // Access theme
+    const [isStyleLoaded, setIsStyleLoaded] = useState(false); // Track style loading
+
     // Initialize map
     useEffect(() => {
         if (!mapContainer.current || map.current) return;
@@ -256,11 +296,96 @@ export default function MapView({ clients, selectedClient, onClientSelect }: Map
 
         map.current = new mapboxgl.Map({
             container: mapContainer.current,
-            style: MAPBOX_CONFIG.style,
+            style: theme === 'dark' ? MAPBOX_CONFIG.styleNight : MAPBOX_CONFIG.styleDay,
             center: [MAPBOX_CONFIG.initialViewport.longitude, MAPBOX_CONFIG.initialViewport.latitude],
-            zoom: MAPBOX_CONFIG.initialViewport.zoom,
-            maxBounds: MAPBOX_CONFIG.maxBounds as unknown as mapboxgl.LngLatBoundsLike, // Restrict panning
+            zoom: 1.5, // Start grand (Globe View)
+            maxBounds: undefined, // MAPBOX_CONFIG.maxBounds as unknown as mapboxgl.LngLatBoundsLike,
+            projection: 'globe' // 3D Globe Projection
         });
+
+        map.current.on('style.load', () => {
+            // Add Fog
+            map.current?.setFog({
+                color: 'rgb(186, 210, 235)', // Lower atmosphere
+                'high-color': 'rgb(36, 92, 223)', // Upper atmosphere
+                'horizon-blend': 0.02, // Atmosphere thickness (default 0.2 at low zooms)
+                'space-color': 'rgb(11, 11, 25)', // Background color
+                'star-intensity': 0.6 // Background star brightness (default 0.35 at low zoooms )
+            });
+
+            // Add Pulsing Dot Image
+            const size = 200;
+            const pulsingDot = {
+                width: size,
+                height: size,
+                data: new Uint8Array(size * size * 4),
+                context: null as CanvasRenderingContext2D | null,
+
+                onAdd: function () {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = this.width;
+                    canvas.height = this.height;
+                    this.context = canvas.getContext('2d');
+                },
+
+                render: function () {
+                    const duration = 1000;
+                    const t = (performance.now() % duration) / duration;
+
+                    const radius = (size / 2) * 0.3;
+                    const outerRadius = (size / 2) * 0.7 * t + radius;
+                    const context = this.context;
+
+                    if (!context) return false;
+
+                    // Draw outer circle
+                    context.clearRect(0, 0, this.width, this.height);
+                    context.beginPath();
+                    context.arc(
+                        this.width / 2,
+                        this.height / 2,
+                        outerRadius,
+                        0,
+                        Math.PI * 2
+                    );
+                    context.fillStyle = `rgba(66, 135, 245, ${1 - t})`;
+                    context.fill();
+
+                    // Draw inner circle
+                    context.beginPath();
+                    context.arc(
+                        this.width / 2,
+                        this.height / 2,
+                        radius,
+                        0,
+                        Math.PI * 2
+                    );
+                    context.fillStyle = 'rgba(66, 135, 245, 1)';
+                    context.strokeStyle = 'white';
+                    context.lineWidth = 2 + 4 * (1 - t);
+                    context.fill();
+                    context.stroke();
+
+                    // Update this image's data with data from the canvas
+                    this.data = new Uint8Array(
+                        context.getImageData(0, 0, this.width, this.height).data.buffer
+                    );
+
+                    // Return true to let the map know that the image was updated
+                    map.current?.triggerRepaint();
+                    return true;
+                }
+            };
+
+            if (!map.current?.hasImage('pulsing-dot')) {
+                map.current?.addImage('pulsing-dot', pulsingDot as never, { pixelRatio: 2 });
+            }
+
+            setIsStyleLoaded(true);
+        });
+
+        // Handle Theme Switch Logic separately to avoid re-init loop
+        // ... (We'll add a separate effect for theme updates)
 
         map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
         map.current.addControl(
@@ -284,18 +409,34 @@ export default function MapView({ clients, selectedClient, onClientSelect }: Map
         };
     }, []);
 
-    // Handle Source and Layers for Clustering
+    // Handle Style Updates (Theme Switch)
+    // Handle Style Updates (Theme Switch)
     useEffect(() => {
-        if (!map.current || !isMapLoaded) return;
+        if (!map.current) return;
+
+        const targetStyle = theme === 'dark' ? MAPBOX_CONFIG.styleNight : MAPBOX_CONFIG.styleDay;
+
+        // Only update if different (mapboxgl handles basic diffing but setStyle is heavy)
+        // We assume styles are different URLs.
+        // Actually, we can just call setStyle, mapbox gl will handle diff if url is same, 
+        // but if url changes, it reloads.
+
+        map.current.setStyle(targetStyle);
+        // Important: setStyle triggers 'style.load' again, so we need to re-add layers there.
+        // We use `isStyleLoaded` state to trigger the layer effect below.
+
+    }, [theme]);
+
+    // Handle Source and Layers (Re-run when style loads or data changes)
+    // Unified Layer Management
+    const addAppLayers = useCallback(() => {
+        if (!map.current) return;
 
         const sourceId = 'clients';
 
-        // Update or Add Source
+        // 1. Clients & Clusters Source
         const source = map.current.getSource(sourceId) as mapboxgl.GeoJSONSource;
-
-        if (source) {
-            source.setData(geoJsonData);
-        } else {
+        if (!source) {
             map.current.addSource(sourceId, {
                 type: 'geojson',
                 data: geoJsonData,
@@ -303,100 +444,96 @@ export default function MapView({ clients, selectedClient, onClientSelect }: Map
                 clusterMaxZoom: MAPBOX_CONFIG.clusterMaxZoom,
                 clusterRadius: MAPBOX_CONFIG.clusterRadius,
             });
+        } else {
+            source.setData(geoJsonData);
+        }
 
-            // Add 3D buildings layer
-            map.current.addLayer({
-                'id': '3d-buildings',
-                'source': 'composite',
-                'source-layer': 'building',
-                'filter': ['==', 'extrude', 'true'],
-                'type': 'fill-extrusion',
-                'minzoom': 14,
-                'paint': {
-                    'fill-extrusion-color': '#aaa',
-                    'fill-extrusion-height': [
-                        'interpolate', ['linear'], ['zoom'],
-                        14, 0,
-                        14.05, ['get', 'height']
-                    ],
-                    'fill-extrusion-base': [
-                        'interpolate', ['linear'], ['zoom'],
-                        14, 0,
-                        14.05, ['get', 'min_height']
-                    ],
-                    'fill-extrusion-opacity': 0.6
-                }
-            });
-
-            // Initialize Draw
-            draw.current = new MapboxDraw({
-                displayControlsDefault: false,
-                controls: {
-                    polygon: true,
-                    trash: true
-                },
-                defaultMode: 'simple_select'
-            });
-
-            map.current.addControl(draw.current, 'top-left');
-
-            // Draw Event Listeners to update UI state
-            map.current.on('draw.create', () => setHasShape(true));
-            map.current.on('draw.delete', () => setHasShape(false));
-            map.current.on('draw.update', () => setHasShape(true));
-
-            // Route Line Layer (Empty initially)
-            map.current.addSource('route', {
+        // 2. Leads Source
+        const leadsSource = map.current.getSource('leads') as mapboxgl.GeoJSONSource;
+        if (!leadsSource) {
+            map.current.addSource('leads', {
                 type: 'geojson',
-                data: {
-                    type: 'Feature',
-                    properties: {},
-                    geometry: {
-                        type: 'LineString',
-                        coordinates: []
-                    }
-                }
+                data: leadsGeoJson
             });
+        } else {
+            leadsSource.setData(leadsGeoJson);
+        }
 
-            map.current.addLayer({
-                id: 'route-line',
-                type: 'line',
-                source: 'route',
-                layout: {
-                    'line-join': 'round',
-                    'line-cap': 'round'
-                },
-                paint: {
-                    'line-color': '#3b82f6', // Blue-500
-                    'line-width': 4,
-                    'line-opacity': 0.8
-                }
-            });
-            // 1. Clusters Layer (Circles)
+        // Only add layers if they don't exist
+        if (!map.current.getLayer('clusters')) {
+
+            // 3D Buildings
+            if (!map.current.getLayer('3d-buildings')) {
+                const buildingColor = theme === 'dark' ? '#243b55' : '#aaa';
+                const buildingOpacity = theme === 'dark' ? 0.8 : 0.6;
+
+                map.current.addLayer({
+                    'id': '3d-buildings',
+                    'source': 'composite',
+                    'source-layer': 'building',
+                    'filter': ['==', 'extrude', 'true'],
+                    'type': 'fill-extrusion',
+                    'minzoom': 14,
+                    'paint': {
+                        'fill-extrusion-color': buildingColor,
+                        'fill-extrusion-height': ['interpolate', ['linear'], ['zoom'], 14, 0, 14.05, ['get', 'height']],
+                        'fill-extrusion-base': ['interpolate', ['linear'], ['zoom'], 14, 0, 14.05, ['get', 'min_height']],
+                        'fill-extrusion-opacity': buildingOpacity
+                    }
+                });
+            }
+
+            // City Lights: Glowing Roads (Dark Mode Only)
+            if (theme === 'dark' && !map.current.getLayer('road-glow')) {
+                map.current.addLayer({
+                    'id': 'road-glow',
+                    'type': 'line',
+                    'source': 'composite',
+                    'source-layer': 'road',
+                    'filter': [
+                        'all',
+                        ['==', '$type', 'LineString'],
+                        ['in', 'class', 'motorway', 'trunk', 'primary']
+                    ],
+                    'layout': {
+                        'line-cap': 'round',
+                        'line-join': 'round'
+                    },
+                    'paint': {
+                        'line-color': '#4dc2f8', // Cyberpunk Blue/Cyan
+                        'line-width': ['interpolate', ['linear'], ['zoom'], 10, 1, 15, 4],
+                        'line-blur': ['interpolate', ['linear'], ['zoom'], 10, 1, 15, 3],
+                        'line-opacity': 0.6
+                    }
+                }, '3d-buildings'); // Place below buildings
+            }
+
+            // Route Line
+            if (!map.current.getSource('route')) {
+                map.current.addSource('route', {
+                    type: 'geojson',
+                    data: { type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: [] } }
+                });
+            }
+            if (!map.current.getLayer('route-line')) {
+                map.current.addLayer({
+                    id: 'route-line',
+                    type: 'line',
+                    source: 'route',
+                    layout: { 'line-join': 'round', 'line-cap': 'round' },
+                    paint: { 'line-color': '#3b82f6', 'line-width': 4, 'line-opacity': 0.8 }
+                });
+            }
+
+            // Clusters
             map.current.addLayer({
                 id: 'clusters',
                 type: 'circle',
                 source: sourceId,
                 filter: ['has', 'point_count'],
                 paint: {
-                    'circle-color': [
-                        'step',
-                        ['get', 'point_count'],
-                        '#51bbd6', // Blue for small clusters
-                        100,
-                        '#f1f075', // Yellow for medium
-                        750,
-                        '#f28cb1'  // Pink for large
-                    ],
-                    'circle-radius': [
-                        'step',
-                        ['get', 'point_count'],
-                        20,
-                        100,
-                        30,
-                        750,
-                        40
-                    ]
+                    'circle-color': ['step', ['get', 'point_count'], '#51bbd6', 100, '#f1f075', 750, '#f28cb1'],
+                    'circle-radius': ['step', ['get', 'point_count'], 20, 100, 30, 750, 40]
                 }
             });
 
@@ -412,100 +549,216 @@ export default function MapView({ clients, selectedClient, onClientSelect }: Map
                 }
             });
 
-            // 3. Unclustered Points (Individual Clients)
+            // Unclustered Points
             map.current.addLayer({
                 id: 'unclustered-point',
                 type: 'circle',
                 source: sourceId,
-                filter: ['!', ['has', 'point_count']],
+                filter: ['all', ['!', ['has', 'point_count']], ['!=', ['get', 'index'], 0]], // Filter OUT main hubs
                 paint: {
-                    // Use a separate color for sub-locations?
                     'circle-color': [
                         'case',
-                        ['==', ['get', 'type'], 'SubLocation'],
-                        '#818cf8', // Indigo for sub-locations
-                        [ // Default logic for Main Hubs
-                            'match',
-                            ['get', 'membershipLevel'],
-                            'Gold', MEMBERSHIP_COLORS.Gold,
-                            'Silver', MEMBERSHIP_COLORS.Silver,
-                            'Bronze', MEMBERSHIP_COLORS.Bronze,
-                            'Platinum', MEMBERSHIP_COLORS.Platinum,
-                            MEMBERSHIP_COLORS.Expired // default
-                        ]
+                        ['==', ['get', 'type'], 'SubLocation'], '#818cf8',
+                        ['match', ['get', 'membershipLevel'], 'Gold', MEMBERSHIP_COLORS.Gold, 'Silver', MEMBERSHIP_COLORS.Silver, 'Bronze', MEMBERSHIP_COLORS.Bronze, 'Platinum', MEMBERSHIP_COLORS.Platinum, MEMBERSHIP_COLORS.Expired]
                     ],
-                    'circle-radius': [
-                        'case',
-                        ['==', ['get', 'type'], 'SubLocation'],
-                        5, // Smaller radius for sub-locations
-                        8  // Larger radius for main hubs
-                    ],
+                    'circle-radius': ['case', ['==', ['get', 'type'], 'SubLocation'], 5, 8],
                     'circle-stroke-width': 2,
                     'circle-stroke-color': '#fff'
                 }
             });
 
-            // Event Handlers
+            // PULSING HUB LAYER (Main locations only)
+            if (!map.current.getLayer('pulsing-hub')) {
+                map.current.addLayer({
+                    id: 'pulsing-hub',
+                    type: 'symbol',
+                    source: sourceId,
+                    filter: ['all', ['!', ['has', 'point_count']], ['==', ['get', 'index'], 0]],
+                    layout: {
+                        'icon-image': 'pulsing-dot',
+                        'icon-allow-overlap': true,
+                        'icon-ignore-placement': true
+                    }
+                });
+            }
 
-            // Click on cluster -> Zoom in
-            // Click on cluster -> Zoom in
-            map.current.on('click', 'clusters', (e: mapboxgl.MapMouseEvent) => {
+            // Leads Layer
+            if (!map.current.getLayer('leads-point')) {
+                map.current.addLayer({
+                    id: 'leads-point',
+                    type: 'circle',
+                    source: 'leads',
+                    paint: {
+                        'circle-color': '#f59e0b',
+                        'circle-radius': 6,
+                        'circle-stroke-width': 2,
+                        'circle-stroke-color': '#fff',
+                        'circle-opacity': 0.8
+                    }
+                });
+            }
+
+            // Draw Control check
+            if (!draw.current && map.current) {
+                draw.current = new MapboxDraw({
+                    displayControlsDefault: false,
+                    controls: { polygon: true, trash: true },
+                    defaultMode: 'simple_select'
+                });
+                map.current.addControl(draw.current, 'top-left');
+                map.current.on('draw.create', () => setHasShape(true));
+                map.current.on('draw.delete', () => setHasShape(false));
+                map.current.on('draw.update', () => setHasShape(true));
+            }
+
+            // Re-bind Event Handlers
+            // Cluster Click
+            map.current.on('click', 'clusters', (e) => {
                 const features = map.current?.queryRenderedFeatures(e.point, { layers: ['clusters'] });
-                const clusterId = features && features[0] && features[0].properties ? features[0].properties.cluster_id : null;
-
-                if (!clusterId || !features || !features[0]) return;
+                const feature = features?.[0];
+                const clusterId = feature?.properties?.cluster_id;
+                if (!feature || !clusterId) return;
 
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const center = (features[0].geometry as any).coordinates;
+                const center = (feature.geometry as any).coordinates;
 
-                (map.current?.getSource(sourceId) as mapboxgl.GeoJSONSource).getClusterExpansionZoom(
-                    clusterId,
-                    (err: Error | null | undefined, zoom: number | null | undefined) => {
-                        if (err || !map.current || zoom === null || zoom === undefined) return;
-                        map.current.easeTo({
-                            center,
-                            zoom: zoom
-                        });
-                    }
-                );
+                (map.current?.getSource(sourceId) as mapboxgl.GeoJSONSource).getClusterExpansionZoom(clusterId, (err, zoom) => {
+                    if (err || !zoom) return;
+                    // Cinematic Cluster Zoom
+                    map.current?.flyTo({
+                        center,
+                        zoom,
+                        speed: 1.2,
+                        curve: 1.1,
+                        pitch: 45, // Mild tilt
+                        bearing: 0,
+                        essential: true
+                    });
+                });
             });
 
-            // Click on individual point -> Select client
-            // Click on individual point -> Select client
-            map.current.on('click', 'unclustered-point', (e: mapboxgl.MapMouseEvent) => {
+            // Point Click
+            map.current.on('click', 'unclustered-point', (e) => {
                 const feature = e.features?.[0];
-                const clientId = feature?.properties?.clientId; // NOTE: Changed from id to clientId
+                const clientId = feature?.properties?.clientId;
 
-                // If Shift Key is held, add to route
+                // Cinematic Point Selection
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const coordinates = (feature?.geometry as any).coordinates;
+
+                // Fly to the point with a "Drone View"
+                map.current?.flyTo({
+                    center: coordinates,
+                    zoom: 17,
+                    pitch: 60,
+                    bearing: -20, // Slight angle for depth
+                    speed: 1.5,
+                    curve: 1,
+                    essential: true
+                });
+
                 if (e.originalEvent.shiftKey || e.originalEvent.metaKey) {
-                    // Actually we need the location object
                     const loc = latestRef.current.allLocations.find(l => l.clientId === clientId && l.type === 'Main');
-                    if (loc) {
-                        latestRef.current.handleAddToRoute(loc);
-                        return;
-                    }
+                    if (loc) latestRef.current.handleAddToRoute(loc);
+                    return;
                 }
 
                 if (clientId) {
                     const client = clients.find(c => c.id === clientId);
-                    if (client) {
-                        latestRef.current.onClientSelect(client);
-                    }
+                    if (client) latestRef.current.onClientSelect(client);
                 }
             });
 
-            // Cursor pointer styling
-            const handleMouseEnter = () => {
-                if (map.current) map.current.getCanvas().style.cursor = 'pointer';
-            };
-            const handleMouseLeave = () => {
-                if (map.current) map.current.getCanvas().style.cursor = '';
-            };
+            // Leads Click
+            map.current.on('click', 'leads-point', (e) => {
+                const feature = e.features?.[0];
+                if (!feature) return;
 
-            map.current.on('mouseenter', 'unclustered-point', handleMouseEnter);
-            map.current.on('mouseleave', 'unclustered-point', handleMouseLeave);
+                const coords = (feature.geometry as GeoJSON.Point).coordinates as [number, number];
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const props = feature.properties as any;
+
+                new mapboxgl.Popup()
+                    .setLngLat(coords)
+                    .setHTML(`
+                        <div class="p-2">
+                            <h3 class="font-bold text-sm">${props.name}</h3>
+                            <p class="text-xs text-gray-500 capitalize">${props.businessType}</p>
+                            <p class="text-xs mt-1">${props.address}</p>
+                            <button class="mt-2 w-full bg-blue-600 text-white text-xs px-2 py-1 rounded" onclick="window.dispatchEvent(new CustomEvent('addToCRM', { detail: '${props.id}' }))">Add to CRM</button>
+                        </div>
+                    `)
+                    .addTo(map.current!);
+            });
+
+            // Cursors
+            const setPointer = () => { if (map.current) map.current.getCanvas().style.cursor = 'pointer'; };
+            const setUnset = () => { if (map.current) map.current.getCanvas().style.cursor = ''; };
+
+            map.current.on('mouseenter', 'clusters', setPointer);
+            map.current.on('mouseleave', 'clusters', setUnset);
+            map.current.on('mouseenter', 'unclustered-point', setPointer);
+            map.current.on('mouseleave', 'unclustered-point', setUnset);
+            map.current.on('mouseenter', 'leads-point', setPointer);
+            map.current.on('mouseleave', 'leads-point', setUnset);
         }
-    }, [geoJsonData, isMapLoaded, clients]);
+    }, [geoJsonData, leadsGeoJson, clients, theme]);
+
+    // Intro Fly-In Effect
+    useEffect(() => {
+        if (!isMapLoaded || !map.current || clients.length === 0) return;
+
+        // Calculate bounds of all clients
+        const bounds = new mapboxgl.LngLatBounds();
+        clients.forEach(c => {
+            if (c.longitude && c.latitude) {
+                bounds.extend([c.longitude, c.latitude]);
+            }
+        });
+
+        // 1. Initial State is Globe (Zoom 1.5) set in init
+        // 2. Wait a moment, then fly to bounds
+        const timer = setTimeout(() => {
+            map.current?.flyTo({
+                center: bounds.getCenter(),
+                zoom: 4, // Start with a country-level view
+                speed: 0.5, // Slow fly
+                curve: 1.2,
+                essential: true,
+                padding: { top: 100, bottom: 100, left: 100, right: 100 }
+            });
+
+            // 3. Then zoom in further to data
+            setTimeout(() => {
+                map.current?.fitBounds(bounds, {
+                    padding: { top: 100, bottom: 100, left: 350, right: 100 }, // Account for sidebar
+                    maxZoom: 12,
+                    duration: 2500,
+                    essential: true
+                });
+            }, 3000);
+
+        }, 1500);
+
+        return () => clearTimeout(timer);
+    }, [isMapLoaded, clients]);
+
+    // Apply Layers when style is loaded
+    useEffect(() => {
+        if (!map.current || !isStyleLoaded) return;
+        addAppLayers();
+    }, [isStyleLoaded, addAppLayers]);
+
+    // Force update data if GeoJSON changes 
+    useEffect(() => {
+        if (!map.current || !map.current.getSource('clients')) return;
+        (map.current.getSource('clients') as mapboxgl.GeoJSONSource).setData(geoJsonData);
+    }, [geoJsonData]);
+
+    useEffect(() => {
+        if (!map.current || !map.current.getSource('leads')) return;
+        (map.current.getSource('leads') as mapboxgl.GeoJSONSource).setData(leadsGeoJson);
+    }, [leadsGeoJson]);
 
     // --- Routing Handlers ---
     const handleAddToRoute = (location: ExtendedLocation) => {

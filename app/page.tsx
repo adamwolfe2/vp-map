@@ -11,6 +11,7 @@ import AppSidebar from '@/components/sidebar/AppSidebar';
 import ClientSidebar from '@/components/sidebar/ClientSidebar';
 import { VendingpreneurClient, MapFilters } from '@/lib/types';
 import { DEFAULT_FILTERS } from '@/lib/constants';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 
 export default function HomePage() {
   // Centralized data fetching with polling
@@ -163,7 +164,8 @@ export default function HomePage() {
 
       {/* Top Right: Auth & Live Indicator (Non-overlapping) */}
       <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
-        <LiveIndicator lastUpdated={lastUpdated} className="bg-white/90 backdrop-blur rounded-full px-3 py-1 shadow-sm border border-slate-200" />
+        <ThemeToggle />
+        <LiveIndicator lastUpdated={lastUpdated} className="bg-white/90 dark:bg-slate-900/90 backdrop-blur rounded-full px-3 py-1 shadow-sm border border-slate-200 dark:border-slate-800" />
         {/* <AuthHeader />  -- Moved AuthHeader to sidebar or keep separate? Let's keep separate for now but ensure it doesn't overlap */}
         {/* Actually user complained about overlap. Let's start clean. */}
       </div>

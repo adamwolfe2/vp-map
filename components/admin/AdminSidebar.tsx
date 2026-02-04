@@ -18,10 +18,10 @@ export default function AdminSidebar() {
     const { logout } = useAuth();
 
     return (
-        <div className="w-64 bg-slate-900 text-white h-screen flex flex-col p-4">
+        <div className="w-64 h-screen flex flex-col p-4 border-r border-slate-200 dark:border-white/10 bg-white/80 dark:bg-black/40 backdrop-blur-xl">
             <div className="mb-8 px-2">
-                <h1 className="text-xl font-bold tracking-tight">VP Admin</h1>
-                <p className="text-xs text-slate-400">Super User Platform</p>
+                <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">VP Admin</h1>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Super User Platform</p>
             </div>
 
             <div className="flex-1 space-y-1">
@@ -32,10 +32,10 @@ export default function AdminSidebar() {
                             key={item.href}
                             href={item.href}
                             className={cn(
-                                "flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sm font-medium",
+                                "flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-200 text-sm font-medium",
                                 isActive
-                                    ? "bg-slate-800 text-emerald-400"
-                                    : "text-slate-400 hover:text-white hover:bg-slate-800/50"
+                                    ? "bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 shadow-sm"
+                                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5"
                             )}
                         >
                             <item.icon className="h-4 w-4" />
@@ -45,10 +45,10 @@ export default function AdminSidebar() {
                 })}
             </div>
 
-            <div className="border-t border-slate-800 pt-4">
+            <div className="border-t border-slate-200 dark:border-white/10 pt-4">
                 <Button
                     variant="ghost"
-                    className="w-full justify-start text-slate-400 hover:text-white hover:bg-slate-800"
+                    className="w-full justify-start text-slate-600 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30"
                     onClick={logout}
                 >
                     <LogOut className="h-4 w-4 mr-2" />

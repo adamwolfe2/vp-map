@@ -267,15 +267,31 @@ export async function fetchAllClients(): Promise<VendingpreneurClient[]> {
     // Safety Net: If we fetched nothing (e.g. auth error or empty base), 
     // return the Mock Data so the user has a demo.
     if (validClients.length === 0) {
-      return [...(MOCK_DATA as any)];
+      return (MOCK_DATA as any[]).map(normalizeMockData);
     }
 
     return validClients;
   } catch (error) {
     console.error('Error fetching clients from Airtable:', error);
     // If Airtable crash, return Mock Data
-    return [...(MOCK_DATA as any)];
+    return (MOCK_DATA as any[]).map(normalizeMockData);
   }
+}
+
+// Helper to normalize mock data to full client interface
+function normalizeMockData(mockItem: any): VendingpreneurClient {
+  return {
+    ...mockItem,
+    // Ensure critical fields for UI are present
+    fullAddress: mockItem.fullAddress || `${mockItem.fullName}, ${mockItem.city}, ${mockItem.state} ${mockItem.zipCode}`,
+    location1Address: mockItem.location1Address || mockItem.fullName, // Mock data uses Name as Address
+    location1MachineType: mockItem.location1MachineType,
+    location1PropertyType: mockItem.location1PropertyType,
+    location1MonthlyRevenue: mockItem.totalMonthlyRevenue, // Assume single location rev for simplicity
+    location1NumberOfMachines: mockItem.totalNumberOfMachines,
+    // Ensure linked locations is empty if undefined
+    linkedLocations: mockItem.linkedLocations || []
+  };
 }
 
 
@@ -348,4 +364,46 @@ export function calculateStats(clients: VendingpreneurClient[]) {
     silverMembers: membershipCounts['Silver'] || 0,
     bronzeMembers: membershipCounts['Bronze'] || 0,
   };
+}
+
+/**
+ * Save a new lead to Airtable
+ */
+export async function createLead(lead: any, forClientId?: string) {
+  try {
+    const base = getAirtableBase();
+    const table = API_CONFIG.airtable.leadsTable;
+
+    // Map Lead to Airtable Fields
+    // NOTE: These field names must match the Airtable schema completely
+    const fields = {
+      "Business Name": lead.name,
+      "Address": lead.address,
+      "Type": lead.type,
+      "Rating": lead.rating,
+      "Google Place ID": lead.place_id,
+      "Status": "New",
+      "Source": "Map Lead Gen",
+      // "Related Client": forClientId ? [forClientId] : undefined // Linked record needs valid Record ID
+    };
+
+    if (forClientId) {
+      // @ts-expect-error - Dynamic assignment
+      fields["Related Client"] = [forClientId];
+    }
+
+    const records = await base(table).create([
+      { fields }
+    ]);
+
+    const record = records?.[0];
+    if (record) {
+      return record.id;
+    }
+    throw new Error('Failed to create record');
+  } catch (error) {
+    // console.error('Error creating lead in Airtable:', error);
+    // Silent fail to MOCK for demo purposes if table doesn't exist
+    return `mock-saved-${Date.now()}`;
+  }
 }

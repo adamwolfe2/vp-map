@@ -38,7 +38,9 @@ export const MEMBERSHIP_COLORS: Record<string, string> = {
 // Mapbox configuration
 export const MAPBOX_CONFIG = {
   token: process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '',
-  style: 'mapbox://styles/mapbox/light-v11',
+  styleDay: 'mapbox://styles/mapbox/light-v11',
+  styleNight: 'mapbox://styles/mapbox/navigation-night-v1', // High contrast "City Lights" base
+  style: 'mapbox://styles/mapbox/light-v11', // Default fallback
   initialViewport: {
     latitude: 39.8283,
     longitude: -98.5795,
@@ -79,6 +81,7 @@ export const API_CONFIG = {
     baseId: process.env.AIRTABLE_BASE_ID || '',
     clientsTable: process.env.AIRTABLE_CLIENTS_TABLE_NAME || 'Clients',
     locationsTable: process.env.AIRTABLE_LOCATIONS_TABLE_NAME || 'Locations',
+    leadsTable: process.env.AIRTABLE_LEADS_TABLE_NAME || 'Leads',
     maxRecords: 100, // Airtable API limit per request
     pageSize: 100,
   },

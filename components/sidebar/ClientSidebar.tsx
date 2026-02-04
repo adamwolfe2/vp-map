@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { X, ExternalLink, MapPin, BarChart3, LayoutDashboard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { VendingpreneurClient } from '@/lib/types';
+import { ClientSidebarProps } from '@/lib/types';
 import { MEMBERSHIP_COLORS } from '@/lib/constants';
 import { getAirtableRecordUrl } from '@/lib/airtable';
 import ContactCard from './ContactCard';
@@ -12,6 +12,7 @@ import ProgramDetails from './ProgramDetails';
 import MetricsGrid from './MetricsGrid';
 import RevenueChart from './RevenueChart';
 import LocationGallery from './LocationGallery';
+import LeadGenerator from '@/components/leads/LeadGenerator';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useMediaQuery } from '@/hooks/use-media-query';
@@ -20,15 +21,11 @@ import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 
-interface ClientSidebarProps {
-    client: VendingpreneurClient;
-    isOpen: boolean;
-    onClose: () => void;
-}
 
-type Tab = 'overview' | 'locations' | 'analytics';
 
-export default function ClientSidebar({ client, isOpen, onClose }: ClientSidebarProps) {
+type Tab = 'overview' | 'locations' | 'analytics' | 'leads';
+
+export default function ClientSidebar({ client, isOpen, onClose, onLeadsFound }: ClientSidebarProps) {
     const isDesktop = useMediaQuery('(min-width: 768px)');
     const membershipColor = MEMBERSHIP_COLORS[client.membershipLevel || 'Expired'];
     const [activeTab, setActiveTab] = useState<Tab>('overview');
@@ -74,6 +71,18 @@ export default function ClientSidebar({ client, isOpen, onClose }: ClientSidebar
                 >
                     <BarChart3 className="h-4 w-4 mr-2" />
                     Analytics
+                </Button>
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setActiveTab('leads')}
+                    className={cn(
+                        "rounded-b-none border-b-2 border-transparent px-4 py-2 h-auto text-sm font-medium text-slate-500 hover:text-slate-900",
+                        activeTab === 'leads' && "border-blue-600 text-blue-600 bg-blue-50/50"
+                    )}
+                >
+                    <MapPin className="h-4 w-4 mr-2" />
+                    Lead Gen
                 </Button>
             </div>
 
@@ -143,6 +152,21 @@ export default function ClientSidebar({ client, isOpen, onClose }: ClientSidebar
                                     <p className="text-2xl font-semibold mt-1">{client.totalNumberOfLocations || 0}</p>
                                 </div>
                             </div>
+                        </motion.div>
+                    )}
+
+                    {activeTab === 'leads' && (
+                        <motion.div
+                            key="leads"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            transition={{ duration: 0.2 }}
+                        >
+                            <LeadGenerator
+                                client={client}
+                                onLeadsFound={onLeadsFound || (() => { })}
+                            />
                         </motion.div>
                     )}
                 </AnimatePresence>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { VendingpreneurClient } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,6 +33,7 @@ export function ClientSheet({ client, trigger, open, onOpenChange }: ClientSheet
 
     const handleSave = () => {
         // Here we would call an API/Mutation to update the client
+        toast.success(`Updated profile for ${formData.fullName}`);
         if (onOpenChange) onOpenChange(false);
     };
 

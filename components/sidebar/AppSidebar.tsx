@@ -34,26 +34,30 @@ export default function AppSidebar({
     return (
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild>
-                <Button variant="outline" size="icon" className="absolute top-4 left-4 z-30 h-10 w-10 bg-white shadow-md rounded-full border-slate-200 hover:bg-slate-50">
-                    <Menu className="h-6 w-6 text-slate-700" />
+                <Button
+                    variant="outline"
+                    size="icon"
+                    className="absolute top-4 left-4 z-30 h-10 w-10 rounded-full border border-white/20 bg-white/60 dark:bg-black/40 backdrop-blur-md shadow-lg hover:bg-white/80 dark:hover:bg-black/60 transition-all text-slate-800 dark:text-white"
+                >
+                    <Menu className="h-6 w-6" />
                 </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-[340px] p-0 flex flex-col z-50">
-                <SheetHeader className="p-4 border-b">
+            <SheetContent side="left" className="w-[340px] p-0 flex flex-col z-50 border-r border-white/20 bg-white/80 dark:bg-black/80 backdrop-blur-xl">
+                <SheetHeader className="p-4 border-b border-white/10 dark:border-white/5">
                     <SheetTitle className="text-left flex items-center gap-2">
-                        <span className="font-bold text-xl tracking-tight">VendingMap</span>
-                        <span className="text-xs font-normal text-muted-foreground px-2 py-0.5 bg-slate-100 rounded-full">v1.0</span>
+                        <span className="font-bold text-xl tracking-tight text-slate-900 dark:text-white">VendingMap</span>
+                        <span className="text-xs font-normal text-muted-foreground px-2 py-0.5 bg-slate-100 dark:bg-white/10 rounded-full">v2.0</span>
                     </SheetTitle>
                 </SheetHeader>
 
-                <div className="p-4 border-b bg-slate-50/50">
+                <div className="p-4 border-b border-white/10 dark:border-white/5 bg-slate-50/50 dark:bg-white/5">
                     <div className="relative">
                         <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                         <Input
                             placeholder="Search clients..."
                             value={searchQuery}
                             onChange={(e) => onSearchChange(e.target.value)}
-                            className="pl-9 bg-white"
+                            className="pl-9 bg-white dark:bg-black/50 border-white/20"
                         />
                     </div>
                     <div className="mt-2 text-xs text-muted-foreground text-right">
@@ -65,18 +69,18 @@ export default function AppSidebar({
                     <div className="p-4 space-y-6">
                         {/* Stats Section */}
                         <div>
-                            <h3 className="text-sm font-semibold text-slate-900 mb-3">Overview</h3>
+                            <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-3">Overview</h3>
                             <SidebarStats stats={stats} />
                         </div>
 
-                        <Separator />
+                        <Separator className="bg-slate-200 dark:bg-white/10" />
 
                         {/* Filters Section */}
                         <div className="space-y-4">
                             <div className="flex items-center justify-between">
-                                <h3 className="text-sm font-semibold text-slate-900">Filters</h3>
+                                <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Filters</h3>
                                 {(searchQuery || JSON.stringify(filters) !== JSON.stringify({ states: [], membershipLevels: [], minMachines: 0, maxMachines: 20 })) && (
-                                    <Button variant="ghost" size="sm" onClick={onResetFilters} className="h-auto p-0 text-xs text-blue-600 hover:text-blue-800 hover:bg-transparent">
+                                    <Button variant="ghost" size="sm" onClick={onResetFilters} className="h-auto p-0 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:bg-transparent">
                                         Reset All
                                     </Button>
                                 )}
@@ -92,7 +96,7 @@ export default function AppSidebar({
                     </div>
                 </div>
 
-                <div className="p-4 border-t bg-slate-50">
+                <div className="p-4 border-t border-white/10 dark:border-white/5 bg-slate-50 dark:bg-black/20">
                     <p className="text-xs text-center text-muted-foreground">
                         &copy; 2024 VendingPreneur
                     </p>

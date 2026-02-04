@@ -158,9 +158,29 @@ export interface ClientsResponse {
   offset?: string;
 }
 
+
 export interface LocationsResponse {
   records: Location[];
   offset?: string;
+}
+
+export interface Lead {
+  id: string;
+  name: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+  type: string;
+  rating?: number;
+  user_ratings_total?: number;
+  place_id?: string;
+  vicinity?: string;
+  photos?: {
+    height: number;
+    width: number;
+    photo_reference: string;
+    html_attributions: string[];
+  }[];
 }
 
 // Airtable API error
@@ -182,6 +202,7 @@ export interface ClientSidebarProps {
   client: VendingpreneurClient;
   isOpen: boolean;
   onClose: () => void;
+  onLeadsFound?: (leads: Lead[]) => void;
 }
 
 export interface SearchBarProps {

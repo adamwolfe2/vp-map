@@ -31,6 +31,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
+import { GlassCard } from '@/components/ui/glass-card';
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[]
@@ -69,19 +70,19 @@ export function DataTable<TData, TValue>({
     })
 
     return (
-        <div className="w-full">
-            <div className="flex items-center py-4">
+        <div className="w-full space-y-4">
+            <div className="flex items-center justify-between py-4">
                 <Input
                     placeholder="Filter emails..."
                     value={(table.getColumn("personalEmail")?.getFilterValue() as string) ?? ""}
                     onChange={(event) =>
                         table.getColumn("personalEmail")?.setFilterValue(event.target.value)
                     }
-                    className="max-w-sm"
+                    className="max-w-sm bg-white dark:bg-white/5"
                 />
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="outline" className="ml-auto">
+                        <Button variant="outline" className="ml-auto dark:bg-white/5 dark:border-white/10">
                             Columns <ChevronDown className="ml-2 h-4 w-4" />
                         </Button>
                     </DropdownMenuTrigger>
@@ -106,7 +107,8 @@ export function DataTable<TData, TValue>({
                     </DropdownMenuContent>
                 </DropdownMenu>
             </div>
-            <div className="rounded-md border bg-white">
+
+            <GlassCard animated={true} className="rounded-md border-slate-200 dark:border-white/10 dark:bg-white/5 overflow-hidden">
                 <Table>
                     <TableHeader>
                         {table.getHeaderGroups().map((headerGroup) => (
@@ -155,7 +157,8 @@ export function DataTable<TData, TValue>({
                         )}
                     </TableBody>
                 </Table>
-            </div>
+            </GlassCard>
+
             <div className="flex items-center justify-end space-x-2 py-4">
                 <div className="flex-1 text-sm text-muted-foreground">
                     {table.getFilteredSelectedRowModel().rows.length} of{" "}

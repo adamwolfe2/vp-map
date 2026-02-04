@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { GlassCard } from '@/components/ui/glass-card';
 import { Pentagon, Trash2, Save, X } from 'lucide-react';
 
 // We'll define a simpler interface for the Draw control interaction
@@ -27,23 +27,25 @@ export default function TerritoryControls({
     if (!isDrawing && !hasShape) {
         return (
             <div className="absolute top-4 left-1/2 -translate-x-1/2 md:left-auto md:right-4 md:translate-x-0 z-10">
-                <Button
-                    variant="secondary"
-                    onClick={onStartDraw}
-                    className="shadow-md bg-white hover:bg-slate-50 text-slate-700"
-                >
-                    <Pentagon className="mr-2 h-4 w-4" />
-                    Draw Territory
-                </Button>
+                <GlassCard animated={true} className="p-1">
+                    <Button
+                        variant="ghost"
+                        onClick={onStartDraw}
+                        className="text-slate-700 dark:text-slate-200 hover:bg-white/10"
+                    >
+                        <Pentagon className="mr-2 h-4 w-4" />
+                        Draw Territory
+                    </Button>
+                </GlassCard>
             </div>
         );
     }
 
     return (
         <div className="absolute top-4 left-1/2 -translate-x-1/2 md:left-auto md:right-4 md:translate-x-0 z-10">
-            <Card className="p-2 shadow-lg flex items-center gap-2 animate-in fade-in slide-in-from-top-2">
+            <GlassCard animated={true} className="p-2 flex items-center gap-2">
                 {isDrawing && !hasShape && (
-                    <div className="px-3 text-sm font-medium text-slate-600 animate-pulse">
+                    <div className="px-3 text-sm font-medium text-slate-600 dark:text-slate-300 animate-pulse">
                         Click map to draw polygon...
                     </div>
                 )}
@@ -52,7 +54,7 @@ export default function TerritoryControls({
                     <Button
                         size="sm"
                         onClick={onSave}
-                        className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/20"
                     >
                         <Save className="mr-2 h-4 w-4" />
                         Save
@@ -63,7 +65,7 @@ export default function TerritoryControls({
                     size="sm"
                     variant="ghost"
                     onClick={hasShape ? onClear : onCancel}
-                    className="text-slate-500 hover:text-red-600 hover:bg-red-50"
+                    className="text-slate-500 hover:text-red-400 hover:bg-red-500/10 dark:text-slate-400"
                 >
                     {hasShape ? (
                         <>
@@ -77,7 +79,7 @@ export default function TerritoryControls({
                         </>
                     )}
                 </Button>
-            </Card>
+            </GlassCard>
         </div>
     );
 }
