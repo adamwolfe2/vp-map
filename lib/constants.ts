@@ -79,8 +79,9 @@ export const DEFAULT_FILTERS = {
 export const API_CONFIG = {
   airtable: {
     baseId: process.env.AIRTABLE_BASE_ID || '',
-    clientsTable: process.env.AIRTABLE_CLIENTS_TABLE_NAME || 'Clients',
-    locationsTable: process.env.AIRTABLE_LOCATIONS_TABLE_NAME || 'Locations',
+    clientsTable: 'tblwDucKYAsPDVBA2', // Clients (New)
+    clientInfoTable: 'tblKaClFLifDEaAWE', // Client Info
+    locationsTable: 'tblkadlOcE5xxrJCu', // Location Data
     leadsTable: process.env.AIRTABLE_LEADS_TABLE_NAME || 'Leads',
     maxRecords: 100, // Airtable API limit per request
     pageSize: 100,
@@ -92,65 +93,55 @@ export const API_CONFIG = {
 
 // Field mappings from Airtable to our types
 export const AIRTABLE_FIELD_MAPPING = {
-  id: 'id',
+  id: 'Record ID',
   fullName: 'Full Name',
   clientId: 'Client ID*',
   firstName: 'First Name',
   lastName: 'Last Name',
   membershipLevel: 'Membership Level',
-  status: 'Status',
+  status: 'Status (Program Level)', // Updated from schema
+  programLevel: 'Current Program Level', // New
   dateAdded: 'Date Added',
   programStartDate: 'Program Start Date',
   daysInProgram: 'Days in Program',
   personalEmail: 'Personal Email',
-  businessEmail: 'Business Email',
+  businessEmail: 'Business Email', // Might not exist in new schema, but keeping for safety
   phoneNumber: 'Phone Number',
-  businessName: 'Business Name',
+  businessName: 'Business Name', // Might be missing
   streetAddress: 'Street, Building',
   city: 'City',
   state: 'State/Province',
   zipCode: 'Zip Code',
   fullAddress: 'Full Address',
-  latitude: 'Latitude',
-  longitude: 'Longitude',
-  totalNumberOfMachines: 'Total Number of Machines',
-  totalNumberOfLocations: 'Total Number of Locations',
-  totalMonthlyRevenue: 'Total Monthly Revenue',
-  totalNetRevenue: 'Total Net Revenue',
-  location1Address: 'Location 1 Address',
-  location1MachineType: 'Location 1 Machine Type',
-  location1MonthlyRevenue: 'Location 1 Monthly Revenue',
-  location1NumberOfMachines: 'Location 1 Number of Machines',
-  location1PropertyType: 'Location 1 Property Type',
-  location2Address: 'Location 2 Address',
-  location2MachineType: 'Location 2 Machine Type',
-  location2MonthlyRevenue: 'Location 2 Monthly Revenue',
-  location2NumberOfMachines: 'Location 2 Number of Machines',
-  location2PropertyType: 'Location 2 Property Type',
-  location3Address: 'Location 3 Address',
-  location3MachineType: 'Location 3 Machine Type',
-  location3MonthlyRevenue: 'Location 3 Monthly Revenue',
-  location3NumberOfMachines: 'Location 3 Number of Machines',
-  location3PropertyType: 'Location 3 Property Type',
-  location4Address: 'Location 4 Address',
-  location4MachineType: 'Location 4 Machine Type',
-  location4MonthlyRevenue: 'Location 4 Monthly Revenue',
-  location4NumberOfMachines: 'Location 4 Number of Machines',
-  location4PropertyType: 'Location 4 Property Type',
-  location5Address: 'Location 5 Address',
-  location5MachineType: 'Location 5 Machine Type',
-  location5MonthlyRevenue: 'Location 5 Monthly Revenue',
-  location5NumberOfMachines: 'Location 5 Number of Machines',
-  location5PropertyType: 'Location 5 Property Type',
+  // Coordinates might be computed or from specific fields if available
+  // New schema has "Coordinates (for Scraping)" but we might strictly use geocoding
+  totalNumberOfMachines: 'Total Number of Machines', // Will overwrite with Client Info data
+  totalNumberOfLocations: 'Total Number of Locations', // Will overwrite with Client Info data
+
   vendHubClientId: 'VendHub Client ID',
-  inVendHub: 'in_vendhub',
-  nationalContracts: 'National Contracts',
-  skoolJoinDate: 'Skool Join Date',
-  salesRep: 'Sales Rep',
-  notes: 'Notes',
-  profilePicture: 'Profile Picture',
-  gallery: 'Gallery',
-  attachments: 'Attachments',
+  inVendHub: 'invited_to_vendhub',
+  nationalContracts: 'National Contracts', // Check if exists
+  skoolJoinDate: 'Skool Join Date', // Check if exists
+  salesRep: 'Sales Rep', // Check if exists
+} as const;
+
+export const CLIENT_INFO_FIELD_MAPPING = {
+  email: 'Current Email to Reach You',
+  phoneNumber: 'Phone Number',
+  totalLocations: 'Total Number of Locations',
+  totalMachines: 'Total Number of Machines',
+  shareInsights: 'Share Insights',
+} as const;
+
+export const LOCATION_DATA_FIELD_MAPPING = {
+  email: 'Email Address', // Join Key
+  address: 'Location Address',
+  propertyType: 'Property Type',
+  machineType: 'Machine Type',
+  monthlyRevenue: 'Monthly Revenue',
+  machinesCount: 'Number of Machines',
+  locationType: 'Location Type',
+  placementLocation: 'Placement Location',
 } as const;
 
 export const LOCATIONS_FIELD_MAPPING = {

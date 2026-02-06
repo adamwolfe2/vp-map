@@ -14,9 +14,11 @@ export interface VendingpreneurClient {
   // Membership & Status
   membershipLevel: 'Gold' | 'Silver' | 'Bronze' | 'Platinum' | null;
   status: string; // "Status" field
+  programLevel?: string; // New: "Current Program Level"
   dateAdded: string; // "Date Added" field
   programStartDate?: string;
   daysInProgram?: number;
+  shareInsights?: boolean; // New: From Client Info
 
   // Contact Info
   personalEmail?: string;
@@ -127,6 +129,8 @@ export interface Location {
   propertyType?: string;
   monthlyRevenue?: number;
   machinesCount?: number;
+  locationType?: string; // New: "Location Type"
+  placementLocation?: string; // New: "Placement Location"
   clientId?: string[]; // Array of linked record IDs
   machines?: Machine[]; // Telemetry Data
 }

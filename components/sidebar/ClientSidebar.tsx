@@ -221,6 +221,11 @@ export default function ClientSidebar({ client, isOpen, onClose, onLeadsFound }:
                 <Badge variant="outline" className="px-2.5 py-0.5 text-xs font-medium bg-white/10 text-slate-300 border-white/10">
                     {client.status}
                 </Badge>
+                {client.programLevel && (
+                    <Badge variant="outline" className="px-2.5 py-0.5 text-xs font-medium bg-emerald-500/10 text-emerald-400 border-emerald-500/20">
+                        {client.programLevel}
+                    </Badge>
+                )}
                 {client.vendHubClientId && (
                     <Badge variant="secondary" className="px-2.5 py-0.5 text-xs font-medium bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 border border-indigo-500/20">
                         VendHub Sync

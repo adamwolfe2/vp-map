@@ -3,7 +3,7 @@
 import { GlassCard } from '@/components/ui/glass-card';
 import { VendingpreneurClient } from '@/lib/types';
 import { formatDate } from '@/lib/utils';
-import { Calendar, Briefcase, UserCheck, FileText } from 'lucide-react';
+import { Calendar, Briefcase, UserCheck, FileText, Zap, Clock } from 'lucide-react';
 
 interface ProgramDetailsProps {
     client: VendingpreneurClient;
@@ -19,6 +19,25 @@ export default function ProgramDetails({ client }: ProgramDetailsProps) {
             <h4 className="text-sm font-semibold text-white border-b border-white/5 pb-2">Program Details</h4>
 
             <div className="space-y-3">
+                {client.programLevel && (
+                    <div className="flex items-start gap-3">
+                        <Zap className="h-4 w-4 text-yellow-500/70 mt-0.5" />
+                        <div>
+                            <p className="text-xs text-slate-400 font-medium">Program Level</p>
+                            <p className="text-sm text-white font-medium">{client.programLevel}</p>
+                        </div>
+                    </div>
+                )}
+
+                {client.daysInProgram !== undefined && (
+                    <div className="flex items-start gap-3">
+                        <Clock className="h-4 w-4 text-slate-500 mt-0.5" />
+                        <div>
+                            <p className="text-xs text-slate-400 font-medium">Time in Program</p>
+                            <p className="text-sm text-slate-200">{client.daysInProgram} days</p>
+                        </div>
+                    </div>
+                )}
                 {client.programStartDate && (
                     <div className="flex items-start gap-3">
                         <Calendar className="h-4 w-4 text-slate-500 mt-0.5" />
