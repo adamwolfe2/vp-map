@@ -11,6 +11,7 @@ const MAPBOX_ACCESS_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
 const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID;
 const AIRTABLE_API_KEY = process.env.AIRTABLE_PERSONAL_ACCESS_TOKEN;
 const LOCATION_TABLE_ID = 'tblkadlOcE5xxrJCu';
+const CLIENTS_TABLE_ID = 'tblwDucKYAsPDVBA2';
 const OUTPUT_FILE = path.resolve(process.cwd(), 'lib/geodata_cache.json');
 
 if (!MAPBOX_ACCESS_TOKEN || !AIRTABLE_BASE_ID || !AIRTABLE_API_KEY) {
@@ -21,7 +22,7 @@ if (!MAPBOX_ACCESS_TOKEN || !AIRTABLE_BASE_ID || !AIRTABLE_API_KEY) {
 const base = new Airtable({ apiKey: AIRTABLE_API_KEY }).base(AIRTABLE_BASE_ID);
 
 async function sleep(ms: number) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise(resolve => setTimeout(resolve, 75));
 }
 
 async function geocodeAddress(address: string): Promise<[number, number] | null> {
@@ -40,14 +41,10 @@ async function geocodeAddress(address: string): Promise<[number, number] | null>
 }
 
 async function generateCache() {
-    console.log('Fetching locations from Airtable...');
-    const records = await base(LOCATION_TABLE_ID).select().all();
-    console.log(`Found ${records.length} records.`);
-
     const cache: Record<string, [number, number]> = {};
     let processed = 0;
 
-    // Load existing cache if exists to resume/update
+    // Load existing cache
     if (fs.existsSync(OUTPUT_FILE)) {
         try {
             const existing = JSON.parse(fs.readFileSync(OUTPUT_FILE, 'utf-8'));
@@ -58,29 +55,52 @@ async function generateCache() {
         }
     }
 
-    // Process in chunks to avoid rate limits
-    // Mapbox free tier: safe at ~300 req/min? Let's be conservative.
-    for (const record of records) {
+    // 1. Process Location Data
+    console.log(`\n--- Fetching Location Data (${LOCATION_TABLE_ID}) ---`);
+    const locRecords = await base(LOCATION_TABLE_ID).select().all();
+    console.log(`Found ${locRecords.length} location records.`);
+
+    for (const record of locRecords) {
         const address = record.get('Location Address') as string;
         const id = record.id;
 
         if (!address) continue;
 
-        // If not in cache or we want to force refresh (optional), geocode
-        // Using record ID as key is safest if addresses change, 
-        // BUT using Address string as key allows matching even if record ID implies something else? 
-        // Let's use Record ID as primary key for robust cache.
-
         if (!cache[id]) {
-            console.log(`Geocoding (${processed + 1}/${records.length}): ${address}`);
+            console.log(`Geocoding Loc (${processed + 1}): ${address}`);
             const coords = await geocodeAddress(address);
             if (coords) {
                 cache[id] = coords;
             }
-            // Throttle: 100ms = 10 req/sec (limit is usually strict! be careful).
-            // Mapbox Permanent Geocoding might differ.
-            // Let's go with 200ms (5 req/sec).
-            await sleep(200);
+            await sleep(75);
+        }
+        processed++;
+    }
+
+    // 2. Process Clients Table (Fallback Locations)
+    console.log(`\n--- Fetching Clients Table (${CLIENTS_TABLE_ID}) ---`);
+    const clientRecords = await base(CLIENTS_TABLE_ID).select().all();
+    console.log(`Found ${clientRecords.length} client records.`);
+
+    for (const record of clientRecords) {
+        const street = record.get('Street, Building') as string;
+        const city = record.get('City') as string;
+        const state = record.get('State/Province') as string;
+        const id = record.id;
+
+        if (!street) continue;
+
+        // Construct Full Address
+        const parts = [street, city, state].filter(Boolean);
+        const fullAddr = parts.join(', ');
+
+        if (!cache[id]) {
+            console.log(`Geocoding Client (${processed + 1}): ${fullAddr}`);
+            const coords = await geocodeAddress(fullAddr);
+            if (coords) {
+                cache[id] = coords;
+            }
+            await sleep(75);
         }
         processed++;
     }

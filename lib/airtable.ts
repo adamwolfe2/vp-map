@@ -200,13 +200,16 @@ export async function fetchAllClients(): Promise<VendingpreneurClient[]> {
       // Fallback: Use flat fields if NO relational locations found
       if ((!client.locations || client.locations.length === 0) && fields[AIRTABLE_FIELD_MAPPING.streetAddress]) {
         // Create a default "Main" location from the client's own address
+        const coords = (GEODATA_CACHE as any)[client.id];
         client.locations = [{
           id: `main-${client.id}`,
           name: 'Main Address',
           address: String(fields[AIRTABLE_FIELD_MAPPING.fullAddress] || fields[AIRTABLE_FIELD_MAPPING.streetAddress]),
           status: 'Active',
           machinesCount: client.totalNumberOfMachines || 0,
-          monthlyRevenue: client.totalMonthlyRevenue || 0
+          monthlyRevenue: client.totalMonthlyRevenue || 0,
+          latitude: coords ? coords[1] : undefined,
+          longitude: coords ? coords[0] : undefined
         }];
       }
 
