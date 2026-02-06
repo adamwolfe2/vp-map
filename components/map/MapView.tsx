@@ -98,7 +98,7 @@ export default function MapView({ clients, selectedClient, onClientSelect, leads
             // However, strictly speaking, client.locations includes *everything*.
             // Let's iterate client.locations and enhance them.
 
-            if (client.locations) {
+            if (client.locations && client.locations.length > 0) {
                 client.locations.forEach((loc, idx) => {
                     const isMain = idx === 0; // Assume first is main for now, or check loc.name === 'Main Location'
 

@@ -103,9 +103,9 @@ export default function ClientSidebar({ client, isOpen, onClose, onLeadsFound }:
                             <ContactCard client={client} />
                             <ProgramDetails client={client} />
 
-                            <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
-                                <h4 className="text-sm font-semibold text-blue-900 mb-2">Internal Notes</h4>
-                                <p className="text-sm text-blue-800 leading-relaxed">
+                            <div className="bg-blue-500/10 p-4 rounded-lg border border-blue-500/20">
+                                <h4 className="text-sm font-semibold text-blue-300 mb-2">Internal Notes</h4>
+                                <p className="text-sm text-blue-200/80 leading-relaxed">
                                     {client.notes || "No internal notes available for this client."}
                                 </p>
                             </div>
@@ -135,7 +135,7 @@ export default function ClientSidebar({ client, isOpen, onClose, onLeadsFound }:
                         >
                             <div className="text-center mb-6">
                                 <p className="text-sm text-muted-foreground uppercase tracking-widest font-medium">Total Monthly Revenue</p>
-                                <h3 className="text-4xl font-bold text-slate-900 mt-2">
+                                <h3 className="text-4xl font-bold text-white mt-2">
                                     ${(client.totalMonthlyRevenue || 0).toLocaleString()}
                                 </h3>
                             </div>
@@ -143,13 +143,13 @@ export default function ClientSidebar({ client, isOpen, onClose, onLeadsFound }:
                             <RevenueChart currentMonthlyRevenue={client.totalMonthlyRevenue || 0} />
 
                             <div className="grid grid-cols-2 gap-4 mt-6">
-                                <div className="bg-white p-4 rounded-lg border shadow-sm">
-                                    <p className="text-xs text-muted-foreground">Machines Placed</p>
-                                    <p className="text-2xl font-semibold mt-1">{client.machinesPlaced || 0}</p>
+                                <div className="bg-slate-800/50 p-4 rounded-lg border border-white/5 shadow-sm">
+                                    <p className="text-xs text-slate-400">Machines Placed</p>
+                                    <p className="text-2xl font-semibold text-white mt-1">{client.machinesPlaced || 0}</p>
                                 </div>
-                                <div className="bg-white p-4 rounded-lg border shadow-sm">
-                                    <p className="text-xs text-muted-foreground">Locations</p>
-                                    <p className="text-2xl font-semibold mt-1">{client.totalNumberOfLocations || 0}</p>
+                                <div className="bg-slate-800/50 p-4 rounded-lg border border-white/5 shadow-sm">
+                                    <p className="text-xs text-slate-400">Locations</p>
+                                    <p className="text-2xl font-semibold text-white mt-1">{client.totalNumberOfLocations || 0}</p>
                                 </div>
                             </div>
                         </motion.div>
@@ -173,7 +173,7 @@ export default function ClientSidebar({ client, isOpen, onClose, onLeadsFound }:
             </div>
 
             {/* Footer Actions */}
-            <div className="p-4 border-t bg-white space-y-2">
+            <div className="p-4 border-t border-white/10 bg-slate-900 space-y-2">
                 {isAuthenticated && user?.id === client.id ? (
                     <Button
                         className="w-full bg-emerald-600 hover:bg-emerald-700"
@@ -235,7 +235,7 @@ export default function ClientSidebar({ client, isOpen, onClose, onLeadsFound }:
         return (
             <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
                 <SheetContent side="bottom" className="h-[90vh] overflow-hidden flex flex-col p-0 rounded-t-xl">
-                    <SheetHeader className="text-left p-6 border-b bg-white">
+                    <SheetHeader className="text-left p-6 border-b border-white/10 bg-slate-900 text-white">
                         <SheetTitle className="sr-only">Client Details</SheetTitle> {/* Accessibility */}
                         <HeaderContent />
                     </SheetHeader>
@@ -255,7 +255,7 @@ export default function ClientSidebar({ client, isOpen, onClose, onLeadsFound }:
                     exit={{ x: '100%', opacity: 0.5 }}
                     transition={{ type: 'spring', damping: 25, stiffness: 200 }}
                     // WIDER SIDEBAR: w-[600px]
-                    className="fixed right-0 top-0 h-screen w-[600px] bg-slate-950/80 backdrop-blur-xl border-l border-white/10 shadow-2xl z-40 flex flex-col"
+                    className="fixed right-0 top-0 h-screen w-[600px] bg-slate-950/90 backdrop-blur-xl border-l border-white/10 shadow-2xl z-40 flex flex-col"
                 >
                     {/* Header */}
                     <div className="sticky top-0 bg-slate-950/50 backdrop-blur-md border-b border-white/10 p-6 flex items-start justify-between z-20 shadow-sm">

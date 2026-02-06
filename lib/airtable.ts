@@ -196,7 +196,7 @@ async function fetchLocations(): Promise<Map<string, Location[]>> {
     try {
       await base(locationsTable).select({ maxRecords: 1 }).firstPage();
     } catch (e) {
-      console.warn('Locations table not found or not accessible. Using flat data only.');
+      console.error('CRITICAL: Locations table not found or not accessible. Check .env variables for AIRTABLE_LOCATIONS_TABLE_NAME. Using flat data only.', e);
       return locationsMap;
     }
 
