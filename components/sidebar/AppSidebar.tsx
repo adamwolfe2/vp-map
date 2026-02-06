@@ -42,25 +42,25 @@ export default function AppSidebar({
                     <Menu className="h-6 w-6" />
                 </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-[340px] p-0 flex flex-col z-50 border-r border-white/20 bg-white/80 dark:bg-black/80 backdrop-blur-xl">
-                <SheetHeader className="p-4 border-b border-white/10 dark:border-white/5">
+            <SheetContent side="left" className="w-[340px] p-0 flex flex-col z-50 border-r border-white/10 bg-slate-900/95 backdrop-blur-xl">
+                <SheetHeader className="p-4 border-b border-white/10">
                     <SheetTitle className="text-left flex items-center gap-2">
-                        <span className="font-bold text-xl tracking-tight text-slate-900 dark:text-white">VendingMap</span>
-                        <span className="text-xs font-normal text-muted-foreground px-2 py-0.5 bg-slate-100 dark:bg-white/10 rounded-full">v2.0</span>
+                        <span className="font-bold text-xl tracking-tight text-white">VendingMap</span>
+                        <span className="text-xs font-normal text-slate-400 px-2 py-0.5 bg-white/10 rounded-full">v2.0</span>
                     </SheetTitle>
                 </SheetHeader>
 
-                <div className="p-4 border-b border-white/10 dark:border-white/5 bg-slate-50/50 dark:bg-white/5">
+                <div className="p-4 border-b border-white/10 bg-slate-900/50">
                     <div className="relative">
-                        <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
                         <Input
                             placeholder="Search clients..."
                             value={searchQuery}
                             onChange={(e) => onSearchChange(e.target.value)}
-                            className="pl-9 bg-white dark:bg-black/50 border-white/20"
+                            className="pl-9 bg-slate-950/50 border-white/10 text-white placeholder:text-slate-600"
                         />
                     </div>
-                    <div className="mt-2 text-xs text-muted-foreground text-right">
+                    <div className="mt-2 text-xs text-slate-500 text-right">
                         Showing {resultCount} results
                     </div>
                 </div>
@@ -69,18 +69,17 @@ export default function AppSidebar({
                     <div className="p-4 space-y-6">
                         {/* Stats Section */}
                         <div>
-                            <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-3">Overview</h3>
+                            <h3 className="text-sm font-semibold text-white mb-3">Overview</h3>
                             <SidebarStats stats={stats} />
                         </div>
 
-                        <Separator className="bg-slate-200 dark:bg-white/10" />
+                        <Separator className="bg-white/10" />
 
-                        {/* Filters Section */}
                         <div className="space-y-4">
                             <div className="flex items-center justify-between">
-                                <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Filters</h3>
+                                <h3 className="text-sm font-semibold text-white">Filters</h3>
                                 {(searchQuery || JSON.stringify(filters) !== JSON.stringify({ states: [], membershipLevels: [], minMachines: 0, maxMachines: 20 })) && (
-                                    <Button variant="ghost" size="sm" onClick={onResetFilters} className="h-auto p-0 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:bg-transparent">
+                                    <Button variant="ghost" size="sm" onClick={onResetFilters} className="h-auto p-0 text-xs text-blue-400 hover:text-blue-300 hover:bg-transparent">
                                         Reset All
                                     </Button>
                                 )}
@@ -96,8 +95,8 @@ export default function AppSidebar({
                     </div>
                 </div>
 
-                <div className="p-4 border-t border-white/10 dark:border-white/5 bg-slate-50 dark:bg-black/20">
-                    <p className="text-xs text-center text-muted-foreground">
+                <div className="p-4 border-t border-white/10 bg-slate-900/50">
+                    <p className="text-xs text-center text-slate-500">
                         &copy; 2024 VendingPreneur
                     </p>
                 </div>
