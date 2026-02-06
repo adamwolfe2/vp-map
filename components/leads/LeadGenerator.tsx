@@ -137,9 +137,9 @@ export default function LeadGenerator({ client, onLeadsFound }: LeadGeneratorPro
 
     return (
         <div className="space-y-6">
-            <GlassCard animated={true} className="p-4 bg-slate-50/50 dark:bg-white/5 border-blue-100 dark:border-blue-500/20">
-                <h3 className="font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            <GlassCard animated={true} className="p-4 bg-slate-900/50 border-white/10">
+                <h3 className="font-semibold text-white mb-4 flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-blue-400" />
                     Find New Locations
                 </h3>
 
@@ -246,7 +246,7 @@ export default function LeadGenerator({ client, onLeadsFound }: LeadGeneratorPro
 
                 <div className="space-y-2">
                     {leads.map((lead) => (
-                        <GlassCard key={lead.id} className="p-3 bg-slate-800/40 hover:bg-slate-700/50 border-white/5 transition-colors group">
+                        <GlassCard key={lead.id} className="p-3 bg-slate-800/50 hover:bg-slate-700/50 border-white/5 transition-colors group">
                             <div className="flex justify-between items-start gap-2">
                                 <div className="min-w-0 flex-1">
                                     <h5 className="font-medium text-sm text-white truncate group-hover:text-blue-300 transition-colors">{lead.name}</h5>

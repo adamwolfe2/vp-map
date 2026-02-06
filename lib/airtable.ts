@@ -430,7 +430,7 @@ export function filterClients(
 export function getAirtableRecordUrl(recordId: string): string {
   const baseId = process.env.AIRTABLE_BASE_ID || '';
   const tableId = API_CONFIG.airtable.clientsTable;
-  return `https://airtable.com/${baseId}/${tableId}/${recordId}`;
+  return `https://airtable.com/${baseId}/${encodeURIComponent(tableId)}/${recordId}`;
 }
 
 /**

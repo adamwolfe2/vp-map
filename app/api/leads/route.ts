@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { Lead } from '@/lib/types';
 
-const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_API_KEY || process.env.GOOGLE_PLACES_API_KEY;
+const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY || process.env.GOOGLE_API_KEY;
 
 // Mock data generator for when API key is missing
 const generateMockLeads = (lat: number, lng: number, radius: number, type: string, minRating: number = 0, minReviews: number = 0): Lead[] => {
@@ -53,18 +53,18 @@ export async function GET(request: Request) {
     if (!GOOGLE_PLACES_API_KEY) {
         console.warn('⚠️ No Google Places API Key found. Returning mock data.');
         console.log('Environment Check:', {
-            GOOGLE_API_KEY: process.env.GOOGLE_API_KEY ? 'Set' : 'Missing',
             GOOGLE_PLACES_API_KEY: process.env.GOOGLE_PLACES_API_KEY ? 'Set' : 'Missing',
+            GOOGLE_API_KEY: process.env.GOOGLE_API_KEY ? 'Set' : 'Missing',
         });
 
         const minRating = parseFloat(searchParams.get('minRating') || '0');
         const minReviews = parseInt(searchParams.get('minReviews') || '0');
         const mockLeads = generateMockLeads(lat, lng, radius, type, minRating, minReviews);
 
-        return NextResponse.json({ leads: mockLeads, note: 'Mock Data (No API Key)' });
+        return NextResponse.json({ leads: mockLeads, note: 'Mock Data (No API Key - Check Server Logs)' });
     }
 
-    console.log('✅ Using Google Places API Key:', GOOGLE_PLACES_API_KEY.substring(0, 5) + '...');
+    console.log(`✅ Using API Key: ${GOOGLE_PLACES_API_KEY.substring(0, 5)}... (Length: ${GOOGLE_PLACES_API_KEY.length})`);
 
     try {
         // Radius in meters

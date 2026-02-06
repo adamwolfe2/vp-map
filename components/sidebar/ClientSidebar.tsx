@@ -184,8 +184,8 @@ export default function ClientSidebar({ client, isOpen, onClose, onLeadsFound }:
                     </Button>
                 ) : !isAuthenticated ? (
                     <Button
-                        variant="default"
-                        className="w-full"
+                        variant="secondary"
+                        className="w-full bg-slate-800 text-white hover:bg-slate-700 border border-white/10"
                         onClick={() => router.push('/login')}
                     >
                         Claim This Profile

@@ -121,20 +121,20 @@ export default function HomePage() {
 
   if (isLoading) {
     return (
-      <div className="relative h-screen w-screen overflow-hidden bg-background">
+      <div className="relative h-screen w-screen overflow-hidden bg-slate-950">
         {/* Map skeleton */}
-        <div className="absolute inset-0 bg-muted animate-pulse" />
+        <div className="absolute inset-0 bg-slate-900/50 animate-pulse" />
 
         {/* Search bar skeleton */}
-        <div className="absolute top-4 left-4 right-4 md:right-auto md:w-96 h-12 bg-white rounded-lg shadow-lg animate-pulse" />
+        <div className="absolute top-4 left-4 right-4 md:right-auto md:w-96 h-12 bg-slate-800/50 rounded-lg shadow-lg animate-pulse border border-white/5" />
 
         {/* Stats bar skeleton */}
-        <div className="absolute top-24 md:top-4 left-1/2 -translate-x-1/2 w-[calc(100vw-2rem)] md:w-[600px] h-20 bg-white rounded-lg shadow-lg animate-pulse" />
+        <div className="absolute top-24 md:top-4 left-1/2 -translate-x-1/2 w-[calc(100vw-2rem)] md:w-[600px] h-20 bg-slate-800/50 rounded-lg shadow-lg animate-pulse border border-white/5" />
 
         {/* Loading text */}
         <div className="absolute inset-0 flex items-center justify-center">
-          <div className="bg-white px-6 py-4 rounded-lg shadow-xl flex items-center gap-3">
-            <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          <div className="bg-slate-900 px-6 py-4 rounded-lg shadow-xl flex items-center gap-3 border border-white/10 text-white">
+            <div className="h-5 w-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
             <span className="font-medium">Loading map data...</span>
           </div>
         </div>
@@ -143,7 +143,7 @@ export default function HomePage() {
   }
 
   return (
-    <main className="relative h-screen w-screen overflow-hidden bg-slate-50">
+    <main className="relative h-screen w-screen overflow-hidden bg-slate-950">
       {/* Map View */}
       <MapView
         clients={filteredClients}
