@@ -13,6 +13,7 @@ import {
   US_CANADA_BOUNDS
 } from './constants';
 import { MOCK_DATA } from './mock_data';
+import GEODATA_CACHE from './geodata_cache.json';
 
 // Initialize Airtable client
 const getAirtableBase = () => {
@@ -176,6 +177,8 @@ export async function fetchAllClients(): Promise<VendingpreneurClient[]> {
         client.locations = locRecords.map((lr, idx) => {
           const lFields = lr.fields;
           const machinesCount = parseNumber(lFields[LOCATION_DATA_FIELD_MAPPING.machinesCount]) || 1;
+          const coords = (GEODATA_CACHE as any)[lr.id];
+
           return {
             id: lr.id,
             name: `Location ${idx + 1}`,
@@ -187,6 +190,8 @@ export async function fetchAllClients(): Promise<VendingpreneurClient[]> {
             locationType: String(lFields[LOCATION_DATA_FIELD_MAPPING.locationType] || ''),
             placementLocation: String(lFields[LOCATION_DATA_FIELD_MAPPING.placementLocation] || ''),
             status: 'Active',
+            latitude: coords ? coords[1] : undefined,
+            longitude: coords ? coords[0] : undefined,
             machines: generateMockMachines(machinesCount, lr.id)
           };
         });

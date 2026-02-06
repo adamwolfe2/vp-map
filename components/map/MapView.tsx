@@ -180,6 +180,9 @@ export default function MapView({ clients, selectedClient, onClientSelect, leads
         clients.forEach(client => {
             if (client.locations) {
                 client.locations.forEach(loc => {
+                    // Skip if server already provided coordinates
+                    if (loc.latitude && loc.longitude) return;
+
                     let lookupAddress = loc.address;
                     // Heuristics to improve geocoding quality
                     if (lookupAddress && !lookupAddress.includes(',')) {
