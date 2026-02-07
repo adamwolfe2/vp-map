@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Trash2, MapPin, Save } from 'lucide-react';
+import { Trash2, Save } from 'lucide-react';
 import RouteMap from '@/components/map/RouteMap';
 import { saveRoute, Stop } from '@/lib/actions/route';
 import { toast } from 'sonner';

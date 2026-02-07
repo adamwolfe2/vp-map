@@ -1,34 +1,17 @@
-const CACHE_NAME = 'vp-map-v1';
-const URLS_TO_CACHE = [
-    '/',
-    '/icon.png',
-    '/icon-512.png',
-    '/manifest.json'
+
+const CACHE_NAME = 'vendingos-v1';
+const urlsToCache = [
+    '/portal',
+    '/offline'
 ];
 
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then((cache) => {
-                return cache.addAll(URLS_TO_CACHE);
+                return cache.addAll(urlsToCache);
             })
     );
-    self.skipWaiting();
-});
-
-self.addEventListener('activate', (event) => {
-    event.waitUntil(
-        caches.keys().then((cacheNames) => {
-            return Promise.all(
-                cacheNames.map((cacheName) => {
-                    if (cacheName !== CACHE_NAME) {
-                        return caches.delete(cacheName);
-                    }
-                })
-            );
-        })
-    );
-    self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
@@ -41,5 +24,20 @@ self.addEventListener('fetch', (event) => {
                 }
                 return fetch(event.request);
             })
+    );
+});
+
+self.addEventListener('activate', (event) => {
+    const cacheWhitelist = [CACHE_NAME];
+    event.waitUntil(
+        caches.keys().then((cacheNames) => {
+            return Promise.all(
+                cacheNames.map((cacheName) => {
+                    if (cacheWhitelist.indexOf(cacheName) === -1) {
+                        return caches.delete(cacheName);
+                    }
+                })
+            );
+        })
     );
 });

@@ -22,9 +22,17 @@ model User {
   transactions    CreditTransaction[]
   leads           Lead[]
   savedRoutes     SavedRoute[]
+  products        Product[]
+  machines        Machine[]
+  restocks        RestockLog[]
+  expenses        Expense[]
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+
+  // Phase 7: Gamification
+  points          Int      @default(0)
+  isPublic        Boolean  @default(false) // Opt-in for leaderboard
 }
 
 enum Role {
@@ -46,6 +54,11 @@ model Lead {
   
   latitude        Float?
   longitude       Float?
+
+  // Phase 6: Lead Assignment
+  assignedAt      DateTime?
+  adminNotes      String?
+  originalFinderId String? // Admin ID who found it
   
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -79,6 +92,102 @@ model SavedRoute {
   user            User     @relation(fields: [userId], references: [id])
   name            String
   stops           Json     // Ordered list of stop objects
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// --- Phase 2: Inventory & Stocking ---
+
+model Product {
+  id              String   @id @default(cuid())
+  userId          String?  // If null, it's a "Global" product (Coke, Pepsi)
+  user            User?    @relation(fields: [userId], references: [id])
+  
+  name            String
+  brand           String?
+  upc             String?  @unique // Barcode
+  cost            Float?   // COGS
+  price           Float?   // Recommended Vend Price
+  imageUrl        String?
+  
+  slots           Slot[]
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Machine {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  
+  name            String   // e.g. "Gym Lobby Snack"
+  type            String   // "Snake", "Drink", "Combo"
+  locationId      String?  // Link to map location (optional for now)
+  
+  planogram       Planogram?
+  restocks        RestockLog[]
+  expenses        Expense[]
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Planogram {
+  id              String   @id @default(cuid())
+  machineId       String   @unique
+  machine         Machine  @relation(fields: [machineId], references: [id])
+  
+  slots           Slot[]
+  
+  updatedAt       DateTime @updatedAt
+}
+
+model Slot {
+  id              String   @id @default(cuid())
+  planogramId     String
+  planogram       Planogram @relation(fields: [planogramId], references: [id])
+  
+  productId       String?
+  product         Product?  @relation(fields: [productId], references: [id])
+  
+  position        String    // e.g. "A1", "B4"
+  capacity        Int       @default(10)
+  currentStock    Int       @default(0)
+  price           Float     @default(1.50)
+  
+  updatedAt       DateTime @updatedAt
+
+  @@unique([planogramId, position])
+}
+
+model RestockLog {
+  id              String   @id @default(cuid())
+  machineId       String
+  machine         Machine  @relation(fields: [machineId], references: [id])
+  
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  
+  notes           String?
+  totalCost       Float?
+  totalRevenue    Float?   // Cash collected
+  
+  createdAt       DateTime @default(now())
+}
+
+model Expense {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  
+  date            DateTime @default(now())
+  category        String   // "Gas", "Insurance", "Repair", "COGS", "Other"
+  amount          Float
+  description     String?
+  machineId       String?
+  machine         Machine? @relation(fields: [machineId], references: [id])
   
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt

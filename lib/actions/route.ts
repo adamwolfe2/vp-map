@@ -30,8 +30,8 @@ export async function saveRoute(name: string, stops: Stop[]) {
         user = await prisma.user.create({
             data: {
                 clerkId: userId,
-                email: clerkUser.emailAddresses[0].emailAddress,
-                name: `${clerkUser.firstName} ${clerkUser.lastName}`,
+                email: clerkUser.emailAddresses[0]?.emailAddress || 'no-email@example.com',
+                name: `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || 'Unknown User',
                 role: 'OPERATOR'
             }
         });

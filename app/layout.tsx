@@ -5,16 +5,30 @@ import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
+import InstallPrompt from '@/components/InstallPrompt';
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "VendingPreneur Map",
-  description: "Internal CRM mapping tool for Modern Amenities Group",
+  title: "VendingOS",
+  description: "Operating System for Vendingpreneurs",
   manifest: "/manifest.json",
-  viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "VendingOS",
+  },
 };
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false, // App-like feel
+  themeColor: "#000000",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -27,6 +41,7 @@ export default function RootLayout({
           <AuthProvider>
             <ThemeProvider>
               {children}
+              <InstallPrompt />
               <Toaster />
               <ServiceWorkerRegister />
             </ThemeProvider>

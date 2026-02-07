@@ -1,6 +1,8 @@
 
 import Link from 'next/link';
-import { auth, currentUser } from '@clerk/nextjs/server';
+import { currentUser } from '@clerk/nextjs/server';
+
+export const dynamic = 'force-dynamic';
 
 export default async function OperatorPortal() {
     const user = await currentUser();
@@ -29,6 +31,34 @@ export default async function OperatorPortal() {
                     <div className="p-6 border rounded-lg bg-card text-card-foreground shadow-sm hover:border-primary transition-colors cursor-pointer h-full">
                         <h3 className="font-semibold text-lg mb-2">My Route</h3>
                         <p className="text-muted-foreground text-sm">Plan and optimize your daily path.</p>
+                    </div>
+                </Link>
+
+                <Link href="/portal/inventory" className="block">
+                    <div className="p-6 border rounded-lg bg-card text-card-foreground shadow-sm hover:border-primary transition-colors cursor-pointer h-full">
+                        <h3 className="font-semibold text-lg mb-2">Inventory</h3>
+                        <p className="text-muted-foreground text-sm">Manage products and machine planograms.</p>
+                    </div>
+                </Link>
+
+                <Link href="/portal/finance" className="block">
+                    <div className="p-6 border rounded-lg bg-card text-card-foreground shadow-sm hover:border-primary transition-colors cursor-pointer h-full">
+                        <h3 className="font-semibold text-lg mb-2">Financials</h3>
+                        <p className="text-muted-foreground text-sm">Track revenue, expenses, and net profit.</p>
+                    </div>
+                </Link>
+
+                <Link href="/portal/leads" className="block">
+                    <div className="p-6 border rounded-lg bg-card text-card-foreground shadow-sm hover:border-primary transition-colors cursor-pointer h-full">
+                        <h3 className="font-semibold text-lg mb-2">My Leads</h3>
+                        <p className="text-muted-foreground text-sm">View location assignments from HQ.</p>
+                    </div>
+                </Link>
+
+                <Link href="/portal/leaderboard" className="block">
+                    <div className="p-6 border rounded-lg bg-card text-card-foreground shadow-sm hover:border-primary transition-colors cursor-pointer h-full">
+                        <h3 className="font-semibold text-lg mb-2">Leaderboard</h3>
+                        <p className="text-muted-foreground text-sm">See top performing operators.</p>
                     </div>
                 </Link>
             </div>

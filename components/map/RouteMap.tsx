@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { MAPBOX_CONFIG } from '@/lib/constants';
@@ -50,7 +50,7 @@ export default function RouteMap({ stops }: RouteMapProps) {
         return () => {
             map.current?.remove();
         };
-    }, []);
+    }, [theme]);
 
     // Update theme
     useEffect(() => {
