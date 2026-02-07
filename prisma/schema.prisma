@@ -1,0 +1,86 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User Model (Synced with Clerk)
+model User {
+  id              String   @id @default(cuid())
+  clerkId         String   @unique
+  email           String   @unique
+  name            String?
+  role            Role     @default(OPERATOR)
+  
+  // Credits System
+  credits         Int      @default(0) // Available tokens for scraping
+  
+  // Relations
+  transactions    CreditTransaction[]
+  leads           Lead[]
+  savedRoutes     SavedRoute[]
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+enum Role {
+  ADMIN
+  OPERATOR
+}
+
+// Leads (Scraped Data)
+model Lead {
+  id              String   @id @default(cuid())
+  ownerId         String
+  owner           User     @relation(fields: [ownerId], references: [id])
+  
+  businessName    String
+  address         String
+  phone           String?
+  source          String   @default("google_places") // e.g., "google_places", "manual"
+  status          LeadStatus @default(NEW)
+  
+  latitude        Float?
+  longitude       Float?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  INTERESTED
+  CONVERTED
+  REJECTED
+}
+
+// Credit Transactions (Audit Log)
+model CreditTransaction {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  
+  amount          Int      // Positive for purchase, negative for usage
+  type            String   // "purchase", "scrape_usage", "admin_gift"
+  description     String?
+  
+  createdAt       DateTime @default(now())
+}
+
+// Routes (Phase 1)
+model SavedRoute {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  name            String
+  stops           Json     // Ordered list of stop objects
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
