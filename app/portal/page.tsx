@@ -1,4 +1,5 @@
 
+import Link from 'next/link';
 import { auth, currentUser } from '@clerk/nextjs/server';
 
 export default async function OperatorPortal() {
@@ -24,10 +25,12 @@ export default async function OperatorPortal() {
                     <span className="text-xs text-muted-foreground">Potential locations found</span>
                 </div>
 
-                <div className="p-6 border rounded-lg bg-card text-card-foreground shadow-sm">
-                    <h3 className="font-semibold text-lg mb-2">My Route</h3>
-                    <p className="text-muted-foreground text-sm">No active route.</p>
-                </div>
+                <Link href="/portal/my-route" className="block">
+                    <div className="p-6 border rounded-lg bg-card text-card-foreground shadow-sm hover:border-primary transition-colors cursor-pointer h-full">
+                        <h3 className="font-semibold text-lg mb-2">My Route</h3>
+                        <p className="text-muted-foreground text-sm">Plan and optimize your daily path.</p>
+                    </div>
+                </Link>
             </div>
         </div>
     );
