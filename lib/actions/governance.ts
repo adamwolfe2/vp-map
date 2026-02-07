@@ -1,9 +1,8 @@
 'use server';
 
 import { auth } from '@clerk/nextjs/server';
-import { PrismaClient } from '@prisma/client';
+import prisma from '@/lib/prisma';
 
-const prisma = new PrismaClient();
 
 // Admin only: Update price for all products with matching UPC across the entire network
 export async function pushGlobalPriceUpdate(upc: string, newPrice: number) {
@@ -32,7 +31,7 @@ export async function pushGlobalPriceUpdate(upc: string, newPrice: number) {
         select: { id: true }
     });
 
-    const productIds = products.map(p => p.id);
+    const productIds = products.map((p: { id: string }) => p.id);
 
     // Update slots with these products
     const slotsResult = await prisma.slot.updateMany({
