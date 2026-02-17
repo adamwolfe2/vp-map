@@ -40,11 +40,7 @@ async function fetchAllRecords(tableId: string): Promise<any[]> {
     await base(tableId).select({
       pageSize: 100
     }).eachPage((records, fetchNextPage) => {
-      if (allRecords.length === 0 && records.length > 0) {
-        if (tableId === 'tblkadlOcE5xxrJCu') {
-          console.log(`[DEBUG-LOC] Table ${tableId} Fields:`, Object.keys(records[0].fields));
-        }
-      }
+
       records.forEach(record => allRecords.push(record));
       fetchNextPage();
     });
