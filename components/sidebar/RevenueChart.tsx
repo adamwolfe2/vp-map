@@ -33,47 +33,47 @@ export default function RevenueChart({ currentMonthlyRevenue }: RevenueChartProp
     }, [currentMonthlyRevenue]);
 
     return (
-        <GlassCard className="shadow-xl bg-slate-900/50 border-white/5">
-            <CardHeader className="pb-2 text-white/90">
-                <CardTitle className="text-sm font-medium text-slate-400">6-Month Trend</CardTitle>
+        <GlassCard className="shadow-xl bg-white border-slate-200">
+            <CardHeader className="pb-2 text-slate-900">
+                <CardTitle className="text-sm font-medium text-slate-500">6-Month Trend</CardTitle>
             </CardHeader>
             <CardContent>
                 <div className="h-[200px] w-full">
                     <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={data}>
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#ffffff10" />
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                             <XAxis
                                 dataKey="name"
                                 fontSize={12}
                                 tickLine={false}
                                 axisLine={false}
-                                stroke="#94a3b8"
+                                stroke="#64748b"
                             />
                             <YAxis
                                 fontSize={12}
                                 tickLine={false}
                                 axisLine={false}
-                                stroke="#94a3b8"
+                                stroke="#64748b"
                                 tickFormatter={(value) => `$${value / 1000}k`}
                             />
                             <Tooltip
-                                cursor={{ fill: '#ffffff05' }}
+                                cursor={{ fill: '#f1f5f9' }}
                                 contentStyle={{
-                                    backgroundColor: '#0f172a',
+                                    backgroundColor: '#ffffff',
                                     borderRadius: '8px',
-                                    border: '1px solid #1e293b',
-                                    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.5)',
-                                    color: 'white'
+                                    border: '1px solid #e2e8f0',
+                                    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                                    color: '#0f172a'
                                 }}
-                                itemStyle={{ color: '#e2e8f0' }}
-                                labelStyle={{ color: '#94a3b8' }}
+                                itemStyle={{ color: '#334155' }}
+                                labelStyle={{ color: '#64748b' }}
                                 formatter={(value: number | undefined) => [`$${(value || 0).toLocaleString()}`, 'Revenue']}
                             />
                             <Bar dataKey="revenue" radius={[4, 4, 0, 0]}>
                                 {data.map((entry, index) => (
                                     <Cell
                                         key={`cell-${index}`}
-                                        fill={index === data.length - 1 ? '#22c55e' : '#475569'}
+                                        fill={index === data.length - 1 ? '#10b981' : '#cbd5e1'}
                                     />
                                 ))}
                             </Bar>

@@ -151,20 +151,20 @@ export default function LeadGenerator({ client, onLeadsFound }: LeadGeneratorPro
 
     return (
         <div className="space-y-6">
-            <GlassCard animated={true} className="p-4 bg-slate-900/50 border-white/10">
-                <h3 className="font-semibold text-white mb-4 flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-blue-400" />
+            <GlassCard animated={true} className="p-4 bg-white border-slate-200">
+                <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-blue-600" />
                     Find New Locations
                 </h3>
 
                 <div className="space-y-4">
                     <div className="space-y-2">
-                        <label className="text-xs font-medium text-slate-400">Business Type</label>
+                        <label className="text-xs font-medium text-slate-500">Business Type</label>
                         <Select value={type} onValueChange={setType}>
-                            <SelectTrigger className="bg-slate-900/50 border-white/10 text-white placeholder:text-slate-500">
+                            <SelectTrigger className="bg-white border-slate-200 text-slate-900 placeholder:text-slate-400">
                                 <SelectValue />
                             </SelectTrigger>
-                            <SelectContent className="bg-slate-900 border-white/10 text-white">
+                            <SelectContent className="bg-white border-slate-200 text-slate-900">
                                 <SelectItem value="gym">Gym / Fitness Center</SelectItem>
                                 <SelectItem value="office">Corporate Office</SelectItem>
                                 <SelectItem value="car_dealer">Car Dealership</SelectItem>
@@ -181,9 +181,9 @@ export default function LeadGenerator({ client, onLeadsFound }: LeadGeneratorPro
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <label className="text-xs font-medium text-slate-400">Min Rating</label>
+                            <label className="text-xs font-medium text-slate-500">Min Rating</label>
                             <div className="flex items-center gap-2">
-                                <span className="text-xs font-bold text-amber-500">{minRating.toFixed(1)}</span>
+                                <span className="text-xs font-bold text-amber-600">{minRating.toFixed(1)}</span>
                                 <Slider
                                     value={[minRating]}
                                     onValueChange={(val) => setMinRating(val[0] || 3.5)}
@@ -195,12 +195,12 @@ export default function LeadGenerator({ client, onLeadsFound }: LeadGeneratorPro
                             </div>
                         </div>
                         <div className="space-y-2">
-                            <label className="text-xs font-medium text-slate-400">Min Reviews</label>
+                            <label className="text-xs font-medium text-slate-500">Min Reviews</label>
                             <Select value={minReviews.toString()} onValueChange={(v) => setMinReviews(parseInt(v))}>
-                                <SelectTrigger className="h-8 text-xs bg-slate-900/50 border-white/10 text-slate-300">
+                                <SelectTrigger className="h-8 text-xs bg-white border-slate-200 text-slate-700">
                                     <SelectValue />
                                 </SelectTrigger>
-                                <SelectContent className="bg-slate-900 border-white/10 text-white">
+                                <SelectContent className="bg-white border-slate-200 text-slate-900">
                                     <SelectItem value="0">Any</SelectItem>
                                     <SelectItem value="10">10+</SelectItem>
                                     <SelectItem value="50">50+</SelectItem>
@@ -212,8 +212,8 @@ export default function LeadGenerator({ client, onLeadsFound }: LeadGeneratorPro
 
                     <div className="space-y-2">
                         <div className="flex justify-between">
-                            <label className="text-xs font-medium text-slate-400">Search Radius</label>
-                            <span className="text-xs font-bold text-white">{radius[0]} miles</span>
+                            <label className="text-xs font-medium text-slate-500">Search Radius</label>
+                            <span className="text-xs font-bold text-slate-900">{radius[0]} miles</span>
                         </div>
                         <Slider
                             value={radius}
@@ -228,7 +228,7 @@ export default function LeadGenerator({ client, onLeadsFound }: LeadGeneratorPro
                     <Button
                         onClick={fetchLeads}
                         disabled={loading}
-                        className="w-full bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/20 border border-blue-400/20"
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-500/10 border border-blue-500/20"
                     >
                         {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                         {loading ? 'Scanning...' : 'Generate Leads'}
@@ -238,12 +238,12 @@ export default function LeadGenerator({ client, onLeadsFound }: LeadGeneratorPro
 
             <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-semibold text-white">Results ({leads.length})</h4>
+                    <h4 className="text-sm font-semibold text-slate-900">Results ({leads.length})</h4>
                     {leads.length > 0 && (
                         <Button
                             variant="outline"
                             size="sm"
-                            className="h-7 text-xs border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white"
+                            className="h-7 text-xs border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                             onClick={exportToCSV}
                         >
                             <Download className="h-3 w-3 mr-2" />
@@ -253,38 +253,38 @@ export default function LeadGenerator({ client, onLeadsFound }: LeadGeneratorPro
                 </div>
 
                 {leads.length === 0 && !loading && (
-                    <div className="text-center py-8 text-slate-400 text-sm">
+                    <div className="text-center py-8 text-slate-500 text-sm">
                         No leads generated yet. Run a scan above.
                     </div>
                 )}
 
                 <div className="space-y-2">
                     {leads.map((lead) => (
-                        <GlassCard key={lead.id} className="p-3 bg-slate-800/50 hover:bg-slate-700/50 border-white/5 transition-colors group">
+                        <GlassCard key={lead.id} className="p-3 bg-white hover:bg-slate-50 border-slate-200 transition-colors group shadow-sm">
                             <div className="flex justify-between items-start gap-2">
                                 <div className="min-w-0 flex-1">
-                                    <h5 className="font-medium text-sm text-white truncate group-hover:text-blue-300 transition-colors">{lead.name}</h5>
-                                    <p className="text-xs text-slate-400 truncate">{lead.address}</p>
+                                    <h5 className="font-medium text-sm text-slate-900 truncate group-hover:text-blue-600 transition-colors">{lead.name}</h5>
+                                    <p className="text-xs text-slate-500 truncate">{lead.address}</p>
                                     <div className="flex items-center gap-1 mt-1 text-xs text-amber-500">
                                         <Star className="h-3 w-3 fill-current" />
                                         <span>{lead.rating || 'N/A'}</span>
-                                        <span className="text-slate-600">•</span>
-                                        <span className="text-slate-400">{lead.user_ratings_total || 0} reviews</span>
+                                        <span className="text-slate-400">•</span>
+                                        <span className="text-slate-500">{lead.user_ratings_total || 0} reviews</span>
 
                                         {(lead.rating || 0) >= 4.5 && (lead.user_ratings_total || 0) > 50 && (
-                                            <span className="ml-2 flex items-center gap-0.5 text-orange-500 font-bold animate-pulse" title="High Quality Lead">
+                                            <span className="ml-2 flex items-center gap-0.5 text-orange-600 font-bold animate-pulse" title="High Quality Lead">
                                                 🔥 Hot
                                             </span>
                                         )}
                                     </div>
                                     <div className="flex gap-2 mt-2">
                                         {lead.website && (
-                                            <a href={lead.website} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-400 hover:underline">
+                                            <a href={lead.website} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline">
                                                 Website
                                             </a>
                                         )}
                                         {lead.phoneNumber && (
-                                            <a href={`tel:${lead.phoneNumber}`} className="text-xs text-blue-400 hover:underline">
+                                            <a href={`tel:${lead.phoneNumber}`} className="text-xs text-blue-600 hover:underline">
                                                 {lead.phoneNumber}
                                             </a>
                                         )}
@@ -293,7 +293,7 @@ export default function LeadGenerator({ client, onLeadsFound }: LeadGeneratorPro
                                 <Button
                                     size="sm"
                                     variant={savedLeads.has(lead.id) ? "secondary" : "outline"}
-                                    className="h-8 w-8 p-0 shrink-0 border-white/10 bg-white/5 hover:bg-blue-500/20 text-blue-400"
+                                    className="h-8 w-8 p-0 shrink-0 border-slate-200 bg-white hover:bg-blue-50 text-blue-600"
                                     onClick={() => handleCRMAdd(lead)}
                                     disabled={savedLeads.has(lead.id)}
                                 >

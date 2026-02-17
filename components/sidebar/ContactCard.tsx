@@ -21,21 +21,21 @@ export default function ContactCard({ client }: ContactCardProps) {
     };
 
     return (
-        <GlassCard className="p-4 space-y-3 bg-slate-800/50 border-white/5">
+        <GlassCard className="p-4 space-y-3 bg-white border-slate-200 shadow-sm">
             {client.personalEmail && (
                 <div className="flex items-center justify-between group">
                     <a
                         href={`mailto:${client.personalEmail}`}
-                        className="flex items-center gap-2 text-sm hover:text-blue-400 truncate text-slate-300"
+                        className="flex items-center gap-2 text-sm hover:text-blue-600 truncate text-slate-600"
                     >
-                        <Mail className="h-4 w-4 text-slate-500" />
+                        <Mail className="h-4 w-4 text-slate-400 group-hover:text-blue-500" />
                         <span className="truncate">{client.personalEmail}</span>
                     </a>
                     <button
                         onClick={() => copyToClipboard(client.personalEmail!, 'Email')}
-                        className="opacity-0 group-hover:opacity-100 p-1 hover:bg-white/10 rounded"
+                        className="opacity-0 group-hover:opacity-100 p-1 hover:bg-slate-100 rounded text-slate-400 hover:text-slate-600"
                     >
-                        <Copy className="h-3 w-3 text-slate-400" />
+                        <Copy className="h-3 w-3" />
                     </button>
                 </div>
             )}
@@ -44,34 +44,34 @@ export default function ContactCard({ client }: ContactCardProps) {
                 <div className="flex items-center justify-between group">
                     <a
                         href={`tel:${client.phoneNumber}`}
-                        className="flex items-center gap-2 text-sm hover:text-blue-400 text-slate-300"
+                        className="flex items-center gap-2 text-sm hover:text-blue-600 text-slate-600"
                     >
-                        <Phone className="h-4 w-4 text-slate-500" />
+                        <Phone className="h-4 w-4 text-slate-400 group-hover:text-blue-500" />
                         <span>{formatPhoneNumber(client.phoneNumber)}</span>
                     </a>
                     <button
                         onClick={() => copyToClipboard(client.phoneNumber!, 'Phone')}
-                        className="opacity-0 group-hover:opacity-100 p-1 hover:bg-white/10 rounded"
+                        className="opacity-0 group-hover:opacity-100 p-1 hover:bg-slate-100 rounded text-slate-400 hover:text-slate-600"
                     >
-                        <Copy className="h-3 w-3 text-slate-400" />
+                        <Copy className="h-3 w-3" />
                     </button>
                 </div>
             )}
 
             {client.businessName && (
-                <div className="flex items-center gap-2 text-sm text-slate-300">
-                    <Building className="h-4 w-4 text-slate-500" />
+                <div className="flex items-center gap-2 text-sm text-slate-600">
+                    <Building className="h-4 w-4 text-slate-400" />
                     <span>{client.businessName}</span>
                 </div>
             )}
 
             {client.fullAddress && (
                 <div
-                    className="flex items-start gap-2 text-sm cursor-pointer hover:bg-white/5 p-1 -ml-1 rounded transition-colors group"
+                    className="flex items-start gap-2 text-sm cursor-pointer hover:bg-slate-50 p-1 -ml-1 rounded transition-colors group"
                     onClick={() => openGoogleMaps(client.fullAddress!)}
                 >
-                    <MapPin className="h-4 w-4 text-slate-500 mt-0.5 group-hover:text-blue-400" />
-                    <span className="text-slate-300 group-hover:text-white">{client.fullAddress}</span>
+                    <MapPin className="h-4 w-4 text-slate-400 mt-0.5 group-hover:text-blue-500" />
+                    <span className="text-slate-600 group-hover:text-slate-900">{client.fullAddress}</span>
                 </div>
             )}
         </GlassCard>

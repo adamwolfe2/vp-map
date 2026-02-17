@@ -49,12 +49,12 @@ export default function MetricsGrid({ client }: MetricsGridProps) {
     return (
         <div className="grid grid-cols-2 gap-4">
             {metrics.map((metric) => (
-                <GlassCard key={metric.label} className="p-4 bg-slate-800/50 border-white/5">
+                <GlassCard key={metric.label} className="p-4 bg-white border-slate-200 shadow-sm">
                     <div className="flex items-center gap-2 mb-2">
-                        <metric.icon className="h-4 w-4 text-emerald-400" />
-                        <p className="text-xs text-slate-400">{metric.label}</p>
+                        <metric.icon className="h-4 w-4 text-emerald-600" />
+                        <p className="text-xs text-slate-500">{metric.label}</p>
                     </div>
-                    <p className="text-2xl font-semibold text-white">{metric.value}</p>
+                    <p className="text-2xl font-semibold text-slate-900">{metric.value}</p>
                 </GlassCard>
             ))}
         </div>

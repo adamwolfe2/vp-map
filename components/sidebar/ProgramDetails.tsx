@@ -15,16 +15,17 @@ export default function ProgramDetails({ client }: ProgramDetailsProps) {
     if (!hasData) return null;
 
     return (
-        <GlassCard className="p-4 space-y-4 bg-slate-800/50 border-white/5">
-            <h4 className="text-sm font-semibold text-white border-b border-white/5 pb-2">Program Details</h4>
+    return (
+        <GlassCard className="p-4 space-y-4 bg-white border-slate-200 shadow-sm">
+            <h4 className="text-sm font-semibold text-slate-900 border-b border-slate-200 pb-2">Program Details</h4>
 
             <div className="space-y-3">
                 {client.programLevel && (
                     <div className="flex items-start gap-3">
-                        <Zap className="h-4 w-4 text-yellow-500/70 mt-0.5" />
+                        <Zap className="h-4 w-4 text-yellow-600 mt-0.5" />
                         <div>
-                            <p className="text-xs text-slate-400 font-medium">Program Level</p>
-                            <p className="text-sm text-white font-medium">{client.programLevel}</p>
+                            <p className="text-xs text-slate-500 font-medium">Program Level</p>
+                            <p className="text-sm text-slate-900 font-medium">{client.programLevel}</p>
                         </div>
                     </div>
                 )}
@@ -33,8 +34,8 @@ export default function ProgramDetails({ client }: ProgramDetailsProps) {
                     <div className="flex items-start gap-3">
                         <Clock className="h-4 w-4 text-slate-500 mt-0.5" />
                         <div>
-                            <p className="text-xs text-slate-400 font-medium">Time in Program</p>
-                            <p className="text-sm text-slate-200">{client.daysInProgram} days</p>
+                            <p className="text-xs text-slate-500 font-medium">Time in Program</p>
+                            <p className="text-sm text-slate-900">{client.daysInProgram} days</p>
                         </div>
                     </div>
                 )}
@@ -42,8 +43,8 @@ export default function ProgramDetails({ client }: ProgramDetailsProps) {
                     <div className="flex items-start gap-3">
                         <Calendar className="h-4 w-4 text-slate-500 mt-0.5" />
                         <div>
-                            <p className="text-xs text-slate-400 font-medium">Start Date</p>
-                            <p className="text-sm text-slate-200">{formatDate(client.programStartDate)}</p>
+                            <p className="text-xs text-slate-500 font-medium">Start Date</p>
+                            <p className="text-sm text-slate-900">{formatDate(client.programStartDate)}</p>
                         </div>
                     </div>
                 )}
@@ -52,8 +53,8 @@ export default function ProgramDetails({ client }: ProgramDetailsProps) {
                     <div className="flex items-start gap-3">
                         <UserCheck className="h-4 w-4 text-slate-500 mt-0.5" />
                         <div>
-                            <p className="text-xs text-slate-400 font-medium">Skool Join Date</p>
-                            <p className="text-sm text-slate-200">{formatDate(client.skoolJoinDate)}</p>
+                            <p className="text-xs text-slate-500 font-medium">Skool Join Date</p>
+                            <p className="text-sm text-slate-900">{formatDate(client.skoolJoinDate)}</p>
                         </div>
                     </div>
                 )}
@@ -62,8 +63,8 @@ export default function ProgramDetails({ client }: ProgramDetailsProps) {
                     <div className="flex items-start gap-3">
                         <Briefcase className="h-4 w-4 text-slate-500 mt-0.5" />
                         <div>
-                            <p className="text-xs text-slate-400 font-medium">Sales Representative</p>
-                            <p className="text-sm text-slate-200">{client.salesRep}</p>
+                            <p className="text-xs text-slate-500 font-medium">Sales Representative</p>
+                            <p className="text-sm text-slate-900">{client.salesRep}</p>
                         </div>
                     </div>
                 )}
@@ -72,14 +73,14 @@ export default function ProgramDetails({ client }: ProgramDetailsProps) {
                     <div className="flex items-start gap-3">
                         <FileText className="h-4 w-4 text-slate-500 mt-0.5" />
                         <div className="flex-1">
-                            <p className="text-xs text-slate-400 font-medium mb-1">National Contracts</p>
+                            <p className="text-xs text-slate-500 font-medium mb-1">National Contracts</p>
                             <div className="flex flex-wrap gap-1">
                                 {Array.isArray(client.nationalContracts) ? client.nationalContracts.map((contract, i) => (
-                                    <span key={i} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-500/10 text-purple-300 border border-purple-500/20">
+                                    <span key={i} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-50 text-purple-700 border border-purple-200">
                                         {contract}
                                     </span>
                                 )) : (
-                                    <span className="text-sm text-slate-200">{client.nationalContracts}</span>
+                                    <span className="text-sm text-slate-900">{client.nationalContracts}</span>
                                 )}
                             </div>
                         </div>
