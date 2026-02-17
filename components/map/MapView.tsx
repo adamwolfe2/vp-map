@@ -61,6 +61,9 @@ export default function MapView({ clients, selectedClient, onClientSelect, leads
     const [isDrawing, setIsDrawing] = useState(false);
     const [hasShape, setHasShape] = useState(false);
 
+    // Geocoding State
+    const [geocodingQueueSize, setGeocodingQueueSize] = useState(0);
+
     // State to store geocoded locations (address -> coords)
     const [geocodedLocations, setGeocodedLocations] = useState<Map<string, { lat: number, lng: number }>>(new Map());
 
@@ -200,13 +203,12 @@ export default function MapView({ clients, selectedClient, onClientSelect, leads
 
         // Throttle and batch geocoding
         const processQueue = async () => {
-            const addresses = Array.from(toGeocode).slice(0, 10); // Process 10 at a time to avoid rate limits
+            const addresses = Array.from(toGeocode).slice(0, 5); // Process 5 at a time concurrently
             if (addresses.length === 0) return;
 
-
-
-            for (const addr of addresses) {
-                if (geocodeCache.has(addr)) continue;
+            // Run 5 requests in parallel to speed up processing
+            await Promise.all(addresses.map(async (addr) => {
+                if (geocodeCache.has(addr)) return;
 
                 try {
                     const token = MAPBOX_CONFIG.token;
@@ -221,21 +223,22 @@ export default function MapView({ clients, selectedClient, onClientSelect, leads
                         const { minLat, maxLat, minLng, maxLng } = US_CANADA_BOUNDS;
                         if (lat >= minLat && lat <= maxLat && lng >= minLng && lng <= maxLng) {
                             geocodeCache.set(addr, { lat, lng });
-                            setGeocodedLocations((prev: Map<string, { lat: number, lng: number }>) => new Map(prev).set(addr, { lat, lng }));
+                            setGeocodedLocations((prev) => new Map(prev).set(addr, { lat, lng }));
                         }
                     }
                 } catch {
                     console.warn('Geocoding failed for', addr);
                 }
-
-                await new Promise(r => setTimeout(r, 250)); // 4 requests per second max
-            }
+            }));
         };
 
         // Only run if we have a lot of missing data
         if (toGeocode.size > 0) {
-            const timer = setTimeout(processQueue, 1000);
+            setGeocodingQueueSize(toGeocode.size);
+            const timer = setTimeout(processQueue, 500); // Faster cycle (0.5s)
             return () => clearTimeout(timer);
+        } else {
+            setGeocodingQueueSize(0);
         }
 
         return undefined;
@@ -637,7 +640,7 @@ export default function MapView({ clients, selectedClient, onClientSelect, leads
                     controls: { polygon: true, trash: true },
                     defaultMode: 'simple_select'
                 });
-                map.current.addControl(draw.current, 'top-left');
+                map.current.addControl(draw.current, 'top-right');
                 map.current.on('draw.create', () => setHasShape(true));
                 map.current.on('draw.delete', () => setHasShape(false));
                 map.current.on('draw.update', () => setHasShape(true));
@@ -974,6 +977,15 @@ export default function MapView({ clients, selectedClient, onClientSelect, leads
             {clients.length > allLocations.length && (
                 <div className="absolute bottom-6 right-6 z-50 bg-white/90 backdrop-blur px-3 py-1 rounded text-xs shadow-md">
                     Mapping {allLocations.length} / {clients.length * 2} locations...
+                </div>
+            )}
+            {/* Geocoding Progress Indicator */}
+            {geocodingQueueSize > 0 && (
+                <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-white/90 backdrop-blur px-4 py-2 rounded-full shadow-md flex items-center gap-2 border border-blue-100">
+                    <div className="h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                    <span className="text-xs font-medium text-blue-700">
+                        {geocodingQueueSize > 1 ? `Mapping ${geocodingQueueSize} locations...` : 'Finishing up...'}
+                    </span>
                 </div>
             )}
         </div>

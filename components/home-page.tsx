@@ -156,20 +156,20 @@ export default function HomePage() {
         resultCount={filteredClients.length}
       />
 
-      {/* Top Right: Auth & Live Indicator (Non-overlapping) */}
-      <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
-        <ThemeToggle />
-        <LiveIndicator lastUpdated={lastUpdated} className="bg-white/90 dark:bg-slate-900/90 backdrop-blur rounded-full px-3 py-1 shadow-sm border border-slate-200 dark:border-slate-800" />
-        {/* <AuthHeader />  -- Moved AuthHeader to sidebar or keep separate? Let's keep separate for now but ensure it doesn't overlap */}
-        {/* Actually user complained about overlap. Let's start clean. */}
+      {/* Bottom Right: Auth & Live Indicator (Clean corner) */}
+      <div className="absolute bottom-6 right-4 z-20 flex flex-col items-end gap-2">
+        <div className="flex items-center gap-2">
+          <LiveIndicator lastUpdated={lastUpdated} className="bg-white/90 backdrop-blur rounded-full px-3 py-1 shadow-sm border border-slate-200 text-xs font-medium" />
+          <ThemeToggle />
+        </div>
       </div>
 
-      {/* Data Quality Warning (Centered) */}
-      <div className="pointer-events-none absolute inset-0 z-10 flex justify-center">
+      {/* Data Quality Warning (Bottom Left) */}
+      <div className="pointer-events-none absolute bottom-6 left-4 z-20 flex justify-start">
         {filteredClients.length > 0 &&
           filteredClients.filter(c => c.latitude && c.longitude).length < filteredClients.length && (
-            <div className="absolute top-4 z-20 pointer-events-auto">
-              <div className="flex items-center gap-2 px-4 py-2 bg-white text-orange-600 rounded-full shadow-sm text-xs font-medium border border-orange-100">
+            <div className="pointer-events-auto">
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-white/90 backdrop-blur text-orange-600 rounded-lg shadow-sm text-xs font-medium border border-orange-100">
                 <AlertTriangle className="w-3.5 h-3.5" />
                 <span>
                   {filteredClients.length - filteredClients.filter(c => c.latitude && c.longitude).length} unmapped
