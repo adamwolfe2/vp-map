@@ -11,6 +11,8 @@ import RoutePanel from './RoutePanel';
 import { optimizeRoute } from '@/lib/routing';
 import { useTheme } from '@/contexts/ThemeContext';
 import MapboxDraw from '@mapbox/mapbox-gl-draw';
+import DebugOverlay from '@/components/DebugOverlay';
+import STATIC_CACHE from '@/lib/geodata_cache.json';
 
 interface MapViewProps {
     clients: VendingpreneurClient[];
@@ -19,8 +21,11 @@ interface MapViewProps {
     leads?: Lead[];
 }
 
-// Memory cache for geocoding to prevent excessive API calls
-const geocodeCache = new Map<string, { lat: number; lng: number }>();
+// Initialize Cache from JSON (Record ID -> [lng, lat])
+const staticCache = STATIC_CACHE as Record<string, number[]>;
+
+// Memory cache for runtime geocoding (Address -> {lat, lng})
+const runtimeCache = new Map<string, { lat: number; lng: number }>();
 
 export default function MapView({ clients, selectedClient, onClientSelect, leads = [] }: MapViewProps) {
     const mapContainer = useRef<HTMLDivElement>(null);
@@ -115,17 +120,28 @@ export default function MapView({ clients, selectedClient, onClientSelect, leads
                         lng = client.longitude;
                     }
 
-                    // If still missing, check cache
+                    // If still missing, check caches
                     if (!lat || !lng) {
-                        const fullAddr = loc.address;
-                        const addressParts = [loc.address, loc.city, loc.state].filter(Boolean).join(', ');
-                        const lookup = fullAddr || addressParts;
+                        // 1. Check Static Cache (by Record ID)
+                        // Note: loc.id should match the Airtable Record ID (e.g., rec...)
+                        const cachedById = staticCache[loc.id] || (isMain ? staticCache[client.id] : undefined);
+                        if (cachedById) {
+                            [lng, lat] = cachedById;
+                        }
 
-                        if (lookup) {
-                            const cached = geocodeCache.get(lookup) || geocodedLocations.get(lookup);
-                            if (cached) {
-                                lat = cached.lat;
-                                lng = cached.lng;
+                        // 2. Check Runtime Cache (by Address)
+                        if (!lat || !lng) {
+                            const fullAddr = loc.address;
+                            const addressParts = [loc.address, loc.city, loc.state].filter(Boolean).join(', ');
+                            const lookup = fullAddr || addressParts;
+
+                            if (lookup) {
+                                // runtimeCache uses exact string matching
+                                const cached = runtimeCache.get(lookup) || geocodedLocations.get(lookup);
+                                if (cached) {
+                                    lat = cached.lat;
+                                    lng = cached.lng;
+                                }
                             }
                         }
                     }
@@ -194,7 +210,7 @@ export default function MapView({ clients, selectedClient, onClientSelect, leads
                         lookupAddress = parts.join(', ');
                     }
 
-                    if (lookupAddress && !geocodeCache.has(lookupAddress) && !geocodedLocations.has(lookupAddress)) {
+                    if (lookupAddress && !runtimeCache.has(lookupAddress) && !geocodedLocations.has(lookupAddress)) {
                         toGeocode.add(lookupAddress);
                     }
                 });
@@ -211,7 +227,7 @@ export default function MapView({ clients, selectedClient, onClientSelect, leads
 
             // Run 5 requests in parallel to speed up processing
             await Promise.all(addresses.map(async (addr) => {
-                if (geocodeCache.has(addr)) return;
+                if (runtimeCache.has(addr)) return;
 
                 try {
                     const token = MAPBOX_CONFIG.token;
@@ -227,7 +243,7 @@ export default function MapView({ clients, selectedClient, onClientSelect, leads
                         if (lat >= minLat && lat <= maxLat && lng >= minLng && lng <= maxLng) {
                             newResults.set(addr, { lat, lng });
                             // Update global memory cache immediately
-                            geocodeCache.set(addr, { lat, lng });
+                            runtimeCache.set(addr, { lat, lng });
                         } else {
                             console.warn(`[Geo] Out of bounds: ${addr} -> ${lat},${lng}`);
                         }
@@ -1005,6 +1021,12 @@ export default function MapView({ clients, selectedClient, onClientSelect, leads
                     </span>
                 </div>
             )}
+
+            <DebugOverlay
+                clients={clients}
+                geocodingQueueSize={geocodingQueueSize}
+                geocodedCount={geocodedLocations.size}
+            />
         </div>
     );
 }
