@@ -202,9 +202,12 @@ export default function MapView({ clients, selectedClient, onClientSelect, leads
         });
 
         // Throttle and batch geocoding
+        // Throttle and batch geocoding
         const processQueue = async () => {
             const addresses = Array.from(toGeocode).slice(0, 5); // Process 5 at a time concurrently
             if (addresses.length === 0) return;
+
+            const newResults = new Map<string, { lat: number, lng: number }>();
 
             // Run 5 requests in parallel to speed up processing
             await Promise.all(addresses.map(async (addr) => {
@@ -222,14 +225,28 @@ export default function MapView({ clients, selectedClient, onClientSelect, leads
                         // Strict US/Canada Check
                         const { minLat, maxLat, minLng, maxLng } = US_CANADA_BOUNDS;
                         if (lat >= minLat && lat <= maxLat && lng >= minLng && lng <= maxLng) {
+                            newResults.set(addr, { lat, lng });
+                            // Update global memory cache immediately
                             geocodeCache.set(addr, { lat, lng });
-                            setGeocodedLocations((prev) => new Map(prev).set(addr, { lat, lng }));
+                        } else {
+                            console.warn(`[Geo] Out of bounds: ${addr} -> ${lat},${lng}`);
                         }
+                    } else {
+                        console.warn(`[Geo] No results: ${addr}`);
                     }
-                } catch {
-                    console.warn('Geocoding failed for', addr);
+                } catch (err) {
+                    console.warn(`[Geo] Error for ${addr}:`, err);
                 }
             }));
+
+            // Batch update state once
+            if (newResults.size > 0) {
+                setGeocodedLocations((prev) => {
+                    const next = new Map(prev);
+                    newResults.forEach((val, key) => next.set(key, val));
+                    return next;
+                });
+            }
         };
 
         // Only run if we have a lot of missing data
