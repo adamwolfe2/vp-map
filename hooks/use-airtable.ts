@@ -54,6 +54,7 @@ export function useAirtableData({ pollingInterval = 30000, enabled = true }: Use
             }
         } catch (err: any) {
             if (isMounted.current) {
+                console.warn('[Geo] API Error:', err.message || err); // Show in Debug Overlay
                 console.error('Error polling Airtable:', err);
                 setError(err);
             }
