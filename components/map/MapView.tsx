@@ -277,7 +277,7 @@ export default function MapView({ clients, selectedClient, onClientSelect, leads
 
         map.current = new mapboxgl.Map({
             container: mapContainer.current,
-            style: MAPBOX_CONFIG.styleNight, // Enforce Night Mode
+            style: MAPBOX_CONFIG.styleDay, // Enforce Day Mode
             center: [MAPBOX_CONFIG.initialViewport.longitude, MAPBOX_CONFIG.initialViewport.latitude],
             zoom: 1.5, // Start grand (Globe View)
             maxBounds: undefined,
@@ -285,10 +285,10 @@ export default function MapView({ clients, selectedClient, onClientSelect, leads
         });
 
         map.current.on('style.load', () => {
-            // Add Fog
+            // Add Fog (Day Mode)
             map.current?.setFog({
-                color: 'rgb(186, 210, 235)', // Lower atmosphere
-                'high-color': 'rgb(36, 92, 223)', // Upper atmosphere
+                color: 'rgb(255, 255, 255)', // Lower atmosphere
+                'high-color': 'rgb(200, 215, 255)', // Upper atmosphere
                 'horizon-blend': 0.02, // Atmosphere thickness (default 0.2 at low zooms)
                 'space-color': 'rgb(11, 11, 25)', // Background color
                 'star-intensity': 0.6 // Background star brightness (default 0.35 at low zoooms )

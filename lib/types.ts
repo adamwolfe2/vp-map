@@ -224,6 +224,9 @@ export interface Lead {
     photo_reference: string;
     html_attributions: string[];
   }[];
+  website?: string;
+  phoneNumber?: string;
+  businessStatus?: string;
 }
 
 // Airtable API error

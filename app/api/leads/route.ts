@@ -49,79 +49,105 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: 'Missing latitude or longitude' }, { status: 400 });
     }
 
-    // If no API Key, return Mock Data
     if (!GOOGLE_PLACES_API_KEY) {
         console.warn('⚠️ No Google Places API Key found. Returning mock data.');
-        console.log('Environment Check:', {
-            GOOGLE_PLACES_API_KEY: process.env.GOOGLE_PLACES_API_KEY ? 'Set' : 'Missing',
-            GOOGLE_API_KEY: process.env.GOOGLE_API_KEY ? 'Set' : 'Missing',
-        });
-
         const minRating = parseFloat(searchParams.get('minRating') || '0');
         const minReviews = parseInt(searchParams.get('minReviews') || '0');
         const mockLeads = generateMockLeads(lat, lng, radius, type, minRating, minReviews);
-
-        return NextResponse.json({ leads: mockLeads, note: 'Mock Data (No API Key - Check Server Logs)' });
+        return NextResponse.json({ leads: mockLeads, note: 'Mock Data (No API Key)' });
     }
 
-    console.log(`✅ Using API Key: ${GOOGLE_PLACES_API_KEY.substring(0, 5)}... (Length: ${GOOGLE_PLACES_API_KEY.length})`);
+    console.log(`✅ Using API Key: ${GOOGLE_PLACES_API_KEY.substring(0, 5)}...`);
 
     try {
-        // Radius in meters
         const radiusMeters = radius * 1609.34;
 
-        // Google Places Nearby Search (New) or Text Search
-        // Using Nearby Search (New) requires FieldMask
-        // Falling back to reliable "Places API (Legacy)" Nearby Search or Text Search if preferred,
-        // but let's assume we use the standard Nearby Search endpoint which is widely supported.
-        const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=${radiusMeters}&keyword=${type}&key=${GOOGLE_PLACES_API_KEY}`;
+        // New Places API (v1) - searchNearby
+        // Allows fetching logic fields like websiteUri, nationalPhoneNumber
+        const url = 'https://places.googleapis.com/v1/places:searchNearby';
 
-        const res = await fetch(url);
+        const requestBody = {
+            includedTypes: [type],
+            maxResultCount: 20,
+            locationRestriction: {
+                circle: {
+                    center: {
+                        latitude: lat,
+                        longitude: lng
+                    },
+                    radius: radiusMeters
+                }
+            }
+        };
+
+        const fieldMask = [
+            'places.id',
+            'places.displayName',
+            'places.formattedAddress',
+            'places.location',
+            'places.rating',
+            'places.userRatingCount',
+            'places.websiteUri',
+            'places.nationalPhoneNumber',
+            'places.businessStatus',
+            'places.photos'
+        ].join(',');
+
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Goog-Api-Key': GOOGLE_PLACES_API_KEY,
+                'X-Goog-FieldMask': fieldMask
+            },
+            body: JSON.stringify(requestBody)
+        });
+
         const data = await res.json();
 
-        if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
-            console.error('Google Places API Error:', data);
-            // Fallback to mock if API quota exceeded or error, for demo purposes?
-            // Better to return error to UI
-            throw new Error(data.error_message || 'Google Places API Error');
+        if (data.error) {
+            console.error('Google Places API Error:', data.error);
+            throw new Error(data.error.message || 'Google Places API Error');
         }
 
+        const rawResults = data.places || [];
         const minRating = parseFloat(searchParams.get('minRating') || '0');
         const minReviews = parseInt(searchParams.get('minReviews') || '0');
 
-        let rawResults = data.results || [];
+        // Filter results
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const filteredResults = rawResults.filter((place: any) => {
+            const rating = place.rating || 0;
+            const reviews = place.userRatingCount || 0;
+            const status = place.businessStatus;
 
-        // Phase 14: "Trash Filter"
-        // Strict filtering to remove low-quality leads
-        if (minRating > 0 || minReviews > 0) {
-            rawResults = rawResults.filter((place: { rating?: number; user_ratings_total?: number }) => {
-                const rating = place.rating || 0;
-                const reviews = place.user_ratings_total || 0;
-                return rating >= minRating && reviews >= minReviews;
-            });
-        }
+            // Filter out closed businesses if needed
+            if (status === 'CLOSED_TEMPORARILY' || status === 'CLOSED_PERMANENTLY') return false;
 
-        const leads: Lead[] = rawResults.map((place: {
-            place_id: string;
-            name: string;
-            formatted_address: string;
-            vicinity: string;
-            geometry: { location: { lat: number; lng: number } };
-            rating: number;
-            user_ratings_total: number;
-            photos: { height: number; width: number; photo_reference: string; html_attributions: string[] }[]
-        }) => ({
-            id: place.place_id,
-            name: place.name,
-            address: place.vicinity || place.formatted_address,
-            latitude: place.geometry.location.lat,
-            longitude: place.geometry.location.lng,
-            type: type || 'unknown',
+            return rating >= minRating && reviews >= minReviews;
+        });
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const leads: Lead[] = filteredResults.map((place: any) => ({
+            id: place.id,
+            name: place.displayName?.text || 'Unknown',
+            address: place.formattedAddress || 'No Address',
+            latitude: place.location?.latitude || 0,
+            longitude: place.location?.longitude || 0,
+            type: type,
             rating: place.rating,
-            user_ratings_total: place.user_ratings_total,
-            vicinity: place.vicinity,
-            place_id: place.place_id,
-            photos: place.photos
+            user_ratings_total: place.userRatingCount,
+            website: place.websiteUri,
+            phoneNumber: place.nationalPhoneNumber,
+            businessStatus: place.businessStatus,
+            place_id: place.id,
+            // Map photos structure if needed, V1 returns `name` (resource name) instead of photo_reference
+            // We might need to adjust the UI to handle V1 photo names or skip for now to ensuring contact info is priority.
+            // Converting V1 photo resource to legacy structure for compatibility if possible, 
+            // otherwise UI might break on photos.
+            // For now, let's omit photos to prevent UI errors until UI is updated, 
+            // or map simplistic structure if UI just checks existence.
+            photos: []
         }));
 
         return NextResponse.json({ leads });

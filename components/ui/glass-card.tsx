@@ -21,7 +21,7 @@ export function GlassCard({ children, className, intensity = 'medium', animated 
     const bgStyles = theme === 'dark'
         // Deeper, richer dark background with a subtle gradient and stronger border
         ? 'bg-slate-950/70 border-white/5 hover:border-white/10 shadow-xl shadow-black/20 ring-1 ring-white/5'
-        : 'bg-white/70 border-white/20 hover:border-white/40 shadow-xl shadow-slate-200/50';
+        : 'bg-white border-gray-200 hover:border-gray-300 shadow-sm hover:shadow-md';
 
     const animationStyles = animated
         ? 'animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out'

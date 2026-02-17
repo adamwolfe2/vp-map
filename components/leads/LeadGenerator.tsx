@@ -263,6 +263,18 @@ export default function LeadGenerator({ client, onLeadsFound }: LeadGeneratorPro
                                             </span>
                                         )}
                                     </div>
+                                    <div className="flex gap-2 mt-2">
+                                        {lead.website && (
+                                            <a href={lead.website} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-400 hover:underline">
+                                                Website
+                                            </a>
+                                        )}
+                                        {lead.phoneNumber && (
+                                            <a href={`tel:${lead.phoneNumber}`} className="text-xs text-blue-400 hover:underline">
+                                                {lead.phoneNumber}
+                                            </a>
+                                        )}
+                                    </div>
                                 </div>
                                 <Button
                                     size="sm"

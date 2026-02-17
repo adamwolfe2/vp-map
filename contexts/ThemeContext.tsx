@@ -12,13 +12,14 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-    // Force dark mode always
-    const theme = 'dark';
+    // Force light mode always as per user request (Notion-style)
+    const theme = 'light';
 
     // On mount, force class
     useEffect(() => {
-        document.documentElement.classList.add('dark');
-        localStorage.setItem('theme', 'dark');
+        document.documentElement.classList.remove('dark');
+        document.documentElement.classList.add('light');
+        localStorage.setItem('theme', 'light');
     }, []);
 
     const toggleTheme = () => {

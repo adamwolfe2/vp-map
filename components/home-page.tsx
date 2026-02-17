@@ -121,21 +121,15 @@ export default function HomePage() {
 
   if (isLoading) {
     return (
-      <div className="relative h-screen w-screen overflow-hidden bg-slate-950">
-        {/* Map skeleton */}
-        <div className="absolute inset-0 bg-slate-900/50 animate-pulse" />
+      <div className="relative h-screen w-screen overflow-hidden bg-white">
+        {/* Sidebar Skeleton */}
+        <div className="absolute top-4 left-4 z-30 h-10 w-10 rounded-md bg-gray-100 animate-pulse border border-gray-200" />
 
-        {/* Search bar skeleton */}
-        <div className="absolute top-4 left-4 right-4 md:right-auto md:w-96 h-12 bg-slate-800/50 rounded-lg shadow-lg animate-pulse border border-white/5" />
-
-        {/* Stats bar skeleton */}
-        <div className="absolute top-24 md:top-4 left-1/2 -translate-x-1/2 w-[calc(100vw-2rem)] md:w-[600px] h-20 bg-slate-800/50 rounded-lg shadow-lg animate-pulse border border-white/5" />
-
-        {/* Loading text */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="bg-slate-900 px-6 py-4 rounded-lg shadow-xl flex items-center gap-3 border border-white/10 text-white">
-            <div className="h-5 w-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-            <span className="font-medium">Loading map data...</span>
+        {/* Loading centered */}
+        <div className="absolute inset-0 flex items-center justify-center bg-white/50 backdrop-blur-sm z-50">
+          <div className="bg-white px-6 py-4 rounded-xl shadow-lg flex flex-col items-center gap-3 border border-gray-100">
+            <div className="h-6 w-6 border-2 border-black border-t-transparent rounded-full animate-spin" />
+            <span className="font-medium text-sm text-gray-500">Loading VendingOS...</span>
           </div>
         </div>
       </div>
@@ -143,7 +137,7 @@ export default function HomePage() {
   }
 
   return (
-    <main className="relative h-screen w-screen overflow-hidden bg-slate-950">
+    <main className="relative h-screen w-screen overflow-hidden bg-white">
       {/* Map View */}
       <MapView
         clients={filteredClients}
@@ -175,8 +169,8 @@ export default function HomePage() {
         {filteredClients.length > 0 &&
           filteredClients.filter(c => c.latitude && c.longitude).length < filteredClients.length && (
             <div className="absolute top-4 z-20 pointer-events-auto">
-              <div className="flex items-center gap-2 px-4 py-2 bg-yellow-100 text-yellow-800 rounded-full shadow-md text-sm font-medium border border-yellow-200">
-                <AlertTriangle className="w-4 h-4" />
+              <div className="flex items-center gap-2 px-4 py-2 bg-white text-orange-600 rounded-full shadow-sm text-xs font-medium border border-orange-100">
+                <AlertTriangle className="w-3.5 h-3.5" />
                 <span>
                   {filteredClients.length - filteredClients.filter(c => c.latitude && c.longitude).length} unmapped
                 </span>

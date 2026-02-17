@@ -10,32 +10,32 @@ interface SidebarStatsProps {
 export default function SidebarStats({ stats }: SidebarStatsProps) {
     return (
         <div className="grid grid-cols-2 gap-3">
-            <Card className="p-3 bg-slate-800/50 border-white/5 shadow-none">
+            <Card className="p-3 bg-white border-gray-200 shadow-sm hover:shadow-md transition-shadow">
                 <div className="flex items-center gap-2 mb-1">
-                    <Users className="h-4 w-4 text-primary opacity-70" />
-                    <p className="text-[10px] text-slate-400 uppercase tracking-widest font-medium">Clients</p>
+                    <Users className="h-4 w-4 text-gray-500" />
+                    <p className="text-[10px] text-gray-400 uppercase tracking-widest font-medium">Clients</p>
                 </div>
-                <p className="text-xl font-bold text-white">
+                <p className="text-xl font-bold text-black">
                     <AnimatedCounter value={stats.totalClients} />
                 </p>
             </Card>
 
-            <Card className="p-3 bg-slate-800/50 border-white/5 shadow-none">
+            <Card className="p-3 bg-white border-gray-200 shadow-sm hover:shadow-md transition-shadow">
                 <div className="flex items-center gap-2 mb-1">
-                    <Package className="h-4 w-4 text-primary opacity-70" />
-                    <p className="text-[10px] text-slate-400 uppercase tracking-widest font-medium">Machines</p>
+                    <Package className="h-4 w-4 text-gray-500" />
+                    <p className="text-[10px] text-gray-400 uppercase tracking-widest font-medium">Machines</p>
                 </div>
-                <p className="text-xl font-bold text-white">
+                <p className="text-xl font-bold text-black">
                     <AnimatedCounter value={stats.totalMachines} />
                 </p>
             </Card>
 
-            <Card className="p-3 bg-slate-800/50 border-white/5 shadow-none col-span-2">
+            <Card className="p-3 bg-white border-gray-200 shadow-sm hover:shadow-md transition-shadow col-span-2">
                 <div className="flex items-center gap-2 mb-1">
-                    <DollarSign className="h-4 w-4 text-emerald-400 opacity-90" />
-                    <p className="text-[10px] text-slate-400 uppercase tracking-widest font-medium">Revenue</p>
+                    <DollarSign className="h-4 w-4 text-emerald-600" />
+                    <p className="text-[10px] text-gray-400 uppercase tracking-widest font-medium">Revenue</p>
                 </div>
-                <p className="text-2xl font-bold text-white">
+                <p className="text-2xl font-bold text-black">
                     <AnimatedCounter value={stats.totalMonthlyRevenue} prefix="$" />
                 </p>
             </Card>

@@ -17,7 +17,8 @@ export const MOCK_DATA = [
     "latitude": 41.88973,
     "zipCode": "60611",
     "city": "Chicago",
-    "state": "IL"
+    "state": "IL",
+    "personalEmail": "demo@vendingpreneur.com"
   },
   {
     "id": "mock-loc-1",
