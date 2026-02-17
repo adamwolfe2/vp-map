@@ -67,7 +67,9 @@ export default function LeadGenerator({ client, onLeadsFound }: LeadGeneratorPro
             ].filter(Boolean).map(a => a!.toLowerCase());
 
             const uniqueLeads = rawLeads.filter(lead => {
-                if (lead.name.toLowerCase().includes(client.businessName?.toLowerCase() || '')) return false;
+                const businessName = client.businessName?.toLowerCase()?.trim();
+                if (businessName && businessName.length > 2 && lead.name.toLowerCase().includes(businessName)) return false;
+
                 const leadAddr = lead.address.toLowerCase();
                 return !existingLocations.some(ex => leadAddr.includes(ex) || ex.includes(leadAddr));
             });
