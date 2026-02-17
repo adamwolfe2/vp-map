@@ -1,7 +1,8 @@
 
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
-'/portal(.*)',
+const isProtected = createRouteMatcher([
+    '/portal(.*)',
     '/admin(.*)',
     '/api/((?!clients).*)' // ALLOW /api/clients to be public
 ]);
