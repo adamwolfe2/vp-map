@@ -166,17 +166,27 @@ export default function HomePage() {
 
       {/* Data Quality Warning (Bottom Left) */}
       <div className="pointer-events-none absolute bottom-6 left-4 z-20 flex justify-start">
-        {filteredClients.length > 0 &&
-          filteredClients.filter(c => c.latitude && c.longitude).length < filteredClients.length && (
+        {filteredClients.length > 0 && (() => {
+          // Correctly calculate unmapped count by checking locations
+          const unmappedCount = filteredClients.filter(c => {
+            const hasRoot = c.latitude && c.longitude;
+            const hasSub = c.locations?.some(l => l.latitude && l.longitude);
+            return !hasRoot && !hasSub;
+          }).length;
+
+          if (unmappedCount === 0) return null;
+
+          return (
             <div className="pointer-events-auto">
               <div className="flex items-center gap-2 px-3 py-1.5 bg-white/90 backdrop-blur text-orange-600 rounded-lg shadow-sm text-xs font-medium border border-orange-100">
                 <AlertTriangle className="w-3.5 h-3.5" />
                 <span>
-                  {filteredClients.length - filteredClients.filter(c => c.latitude && c.longitude).length} unmapped
+                  {unmappedCount} unmapped
                 </span>
               </div>
             </div>
-          )}
+          );
+        })()}
       </div>
 
       {/* Sidebar Layer */}

@@ -24,7 +24,19 @@ export default function LeadGenerator({ client, onLeadsFound }: LeadGeneratorPro
     const [savedLeads, setSavedLeads] = useState<Set<string>>(new Set());
 
     const fetchLeads = async () => {
-        if (!client.latitude || !client.longitude) {
+        // Resolve coordinates: Use root, or first location, or first valid location
+        let lat = client.latitude;
+        let lng = client.longitude;
+
+        if (!lat || !lng) {
+            const validLoc = client.locations?.find(l => l.latitude && l.longitude);
+            if (validLoc) {
+                lat = validLoc.latitude;
+                lng = validLoc.longitude;
+            }
+        }
+
+        if (!lat || !lng) {
             toast.error('Client has no location data to search around.');
             return;
         }
@@ -32,8 +44,8 @@ export default function LeadGenerator({ client, onLeadsFound }: LeadGeneratorPro
         setLoading(true);
         try {
             const queryParams = new URLSearchParams({
-                lat: (client.latitude || 0).toString(),
-                lng: (client.longitude || 0).toString(),
+                lat: lat.toString(),
+                lng: lng.toString(),
                 radius: (radius[0] || 3).toString(),
                 type,
                 minRating: minRating.toString(),

@@ -365,7 +365,7 @@ export default function MapView({ clients, selectedClient, onClientSelect, leads
                         0,
                         Math.PI * 2
                     );
-                    context.fillStyle = `rgba(66, 135, 245, ${1 - t})`;
+                    context.fillStyle = `rgba(30, 41, 59, ${1 - t})`; // Slate-800 fading
                     context.fill();
 
                     // Draw inner circle
@@ -377,7 +377,7 @@ export default function MapView({ clients, selectedClient, onClientSelect, leads
                         0,
                         Math.PI * 2
                     );
-                    context.fillStyle = 'rgba(66, 135, 245, 1)';
+                    context.fillStyle = 'rgba(15, 23, 42, 1)'; // Slate-900 solid
                     context.strokeStyle = 'white';
                     context.lineWidth = 2 + 4 * (1 - t);
                     context.fill();
@@ -542,15 +542,18 @@ export default function MapView({ clients, selectedClient, onClientSelect, leads
                 });
             }
 
-            // Clusters
+            // Clusters - Monochrome / Slate Theme
             map.current.addLayer({
                 id: 'clusters',
                 type: 'circle',
                 source: sourceId,
                 filter: ['has', 'point_count'],
                 paint: {
-                    'circle-color': ['step', ['get', 'point_count'], '#51bbd6', 100, '#f1f075', 750, '#f28cb1'],
-                    'circle-radius': ['step', ['get', 'point_count'], 20, 100, 30, 750, 40]
+                    // Slate-400 -> Slate-600 -> Slate-900
+                    'circle-color': ['step', ['get', 'point_count'], '#94a3b8', 100, '#475569', 750, '#0f172a'],
+                    'circle-radius': ['step', ['get', 'point_count'], 15, 100, 20, 750, 25],
+                    'circle-stroke-width': 2,
+                    'circle-stroke-color': '#ffffff'
                 }
             });
 
@@ -562,11 +565,14 @@ export default function MapView({ clients, selectedClient, onClientSelect, leads
                 layout: {
                     'text-field': '{point_count_abbreviated}',
                     'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
-                    'text-size': 12
+                    'text-size': 11
+                },
+                paint: {
+                    'text-color': '#ffffff'
                 }
             });
 
-            // Unclustered Points
+            // Unclustered Points - Cleaner, smaller dots
             map.current.addLayer({
                 id: 'unclustered-point',
                 type: 'circle',
@@ -576,11 +582,11 @@ export default function MapView({ clients, selectedClient, onClientSelect, leads
                     'circle-color': [
                         'case',
                         ['get', 'hasIssue'], '#ef4444', // RED for issues
-                        ['==', ['get', 'type'], 'SubLocation'], '#818cf8',
+                        ['==', ['get', 'type'], 'SubLocation'], '#64748b', // Slate-500 for sub-locations
                         ['match', ['get', 'membershipLevel'], 'Gold', MEMBERSHIP_COLORS.Gold, 'Silver', MEMBERSHIP_COLORS.Silver, 'Bronze', MEMBERSHIP_COLORS.Bronze, 'Platinum', MEMBERSHIP_COLORS.Platinum, MEMBERSHIP_COLORS.Expired]
                     ],
-                    'circle-radius': ['case', ['==', ['get', 'type'], 'SubLocation'], 5, 8],
-                    'circle-stroke-width': 2,
+                    'circle-radius': ['case', ['==', ['get', 'type'], 'SubLocation'], 4, 6],
+                    'circle-stroke-width': 1.5,
                     'circle-stroke-color': '#fff'
                 }
             });
@@ -595,7 +601,8 @@ export default function MapView({ clients, selectedClient, onClientSelect, leads
                     layout: {
                         'icon-image': 'pulsing-dot',
                         'icon-allow-overlap': true,
-                        'icon-ignore-placement': true
+                        'icon-ignore-placement': true,
+                        'icon-size': 0.7 // Slightly smaller
                     }
                 });
             }
