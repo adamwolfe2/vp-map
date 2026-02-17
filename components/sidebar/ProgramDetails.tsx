@@ -15,7 +15,6 @@ export default function ProgramDetails({ client }: ProgramDetailsProps) {
     if (!hasData) return null;
 
     return (
-    return (
         <GlassCard className="p-4 space-y-4 bg-white border-slate-200 shadow-sm">
             <h4 className="text-sm font-semibold text-slate-900 border-b border-slate-200 pb-2">Program Details</h4>
 
